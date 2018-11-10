@@ -10,6 +10,7 @@ Requirements:
 - <a href="https://pillow.readthedocs.io">Pillow</a> (for creating images)
 - <a href="https://openpyxl.readthedocs.io/">OpenPyXL</a> (for interacting with spreadsheets)
 - <a href="http://docs.python-requests.org/en/master/">Requests</a> (for the bing image search code to work)
+- <a href="https://pyforms-gui.readthedocs.io/en/v4/overview.html">Pyforms</a> (for the UI)
 - An azure subscription key to use the translator api (https://azure.microsoft.com/en-us/services/cognitive-services/translator-text-api/)
 - An azure subscription key to use Bing image search (https://azure.microsoft.com/en-us/services/cognitive-services/bing-image-search-api/)
 - Arial (or swap the font to one you have)

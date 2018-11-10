@@ -3,3 +3,4 @@ subscriptionKey.txt
 .DS_Store
 translatorSubscriptionKey.txt
 imageSubscriptionKey.txt
+*.pyc
