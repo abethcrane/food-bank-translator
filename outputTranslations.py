@@ -37,7 +37,7 @@ print("I'll print each word when I finish translating it")
 # Initialize the spreadsheet
 workbook = Workbook(write_only=True)
 worksheet = workbook.create_sheet("translations")
-worksheet.append(["English", "Simplified Chinese", "Spanish", "Vietnamese", "Image", "Image Url"])
+worksheet.append(["English", "Simplified Chinese", "Spanish", "Vietnamese"])
 
 # Open input file and combine the languages we're translating to into a params string
 params = "";

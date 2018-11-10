@@ -24,7 +24,7 @@ print("I'll print each word when I finish downloading a thumbnail for it")
 workbook = load_workbook(filename = "translatedWords.xlsx")
 worksheet = workbook["translations"]
 
-for rowNum in range(worksheet.max_row, worksheet.max_row+1):#2, worksheet.max_row + 1):
+for rowNum in range(2, worksheet.max_row + 1):
     englishWordCell = "A{}".format(rowNum)
     englishWord = worksheet[englishWordCell].value
     
