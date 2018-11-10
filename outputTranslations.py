@@ -1,8 +1,7 @@
 import http.client, urllib.parse, uuid, json
 from openpyxl import Workbook
-from openpyxl.drawing.image import Image
 
-subscriptionKey =  open("subscriptionKey.txt").read()
+subscriptionKey =  open("translatorSubscriptionKey.txt").read()
 
 host = 'api.cognitive.microsofttranslator.com'
 path = '/translate?api-version=3.0'
@@ -22,8 +21,8 @@ def getTranslationsFromServer (word):
 
     conn = http.client.HTTPSConnection(host)
     conn.request ("POST", path + params, content, headers)
-    response = conn.getresponse ()
-    return response.read ()
+    response = conn.getresponse()
+    return response.read()
     
 def getWordsFromResult(result):
     jsonData = json.loads(result)
@@ -32,6 +31,8 @@ def getWordsFromResult(result):
         words.append(language["text"])
         
     return words
+
+print("I'll print each word when I finish translating it")
 
 # Initialize the spreadsheet
 workbook = Workbook(write_only=True)
@@ -48,12 +49,13 @@ for lang in toLanguages[1:]:
 wordsToTranslate = list(open("words.txt"))
 for word in wordsToTranslate:
     word = word.lstrip().rstrip().capitalize()
-    print(word)
     result = getTranslationsFromServer(word)
     translatedWords = getWordsFromResult(result)
     
     # Append the list of words  to the spreadsheet
     translatedWords.insert(0, word)
     worksheet.append(translatedWords)
+
+    print(word)
 
 workbook.save("translatedWords.xlsx")
