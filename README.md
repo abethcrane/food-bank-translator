@@ -16,7 +16,7 @@ Requirements:
 
 To use:
 - Ensure you have a folder called **foodThumbnails** and one called **images**, in the same dir as your input files and scripts
-- Run the getLanguageCodes.py script (I've included the results here in languageCodes.txt) to see the language codes available
+- Run `python3 getLanguageCodes.py` (I've included the results here in languageCodes.txt) to see the language codes available
 - Modify the **toLanguages.txt** file to include whichever languages you desire
 - Modify the **words.txt** to include the words you'd like to translate
 - Create a file called translatorSubscriptionKey.txt and enter your azure translation subscription key in
