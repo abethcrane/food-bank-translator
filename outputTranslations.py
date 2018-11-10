@@ -1,5 +1,6 @@
 import http.client, urllib.parse, uuid, json
-from PIL import Image, ImageDraw, ImageFont
+from openpyxl import Workbook
+from openpyxl.drawing.image import Image
 
 subscriptionKey =  open("subscriptionKey.txt").read()
 
@@ -32,14 +33,16 @@ def getWordsFromResult(result):
         
     return words
 
+# Initialize the spreadsheet
+workbook = Workbook(write_only=True)
+worksheet = workbook.create_sheet("translations")
+worksheet.append(["English", "Simplified Chinese", "Spanish", "Vietnamese", "Image", "Image Url"])
+
 # Open input file and combine the languages we're translating to into a params string
 params = "";
 toLanguages = list(open("toLanguages.txt"))
 for lang in toLanguages[1:]:
     params += "&to=" + lang.lstrip().rstrip()
-    
-# Our font for the images
-fnt = ImageFont.truetype('/Library/Fonts/Arial Unicode.ttf', 100)
 
 # Read in all the words and translate them
 wordsToTranslate = list(open("words.txt"))
@@ -48,18 +51,9 @@ for word in wordsToTranslate:
     print(word)
     result = getTranslationsFromServer(word)
     translatedWords = getWordsFromResult(result)
-
-    # Draw out the white background + the word we translated
-    img = Image.new('RGB', (1024, 720), color = 'white')
-    d = ImageDraw.Draw(img)
-    height = 10
-    d.text((10,height), word, font=fnt, fill=(0, 0, 0))
-    height += 200
     
-    # Print all the words onto the slide
-    for translatedWord in translatedWords:
-        d.text((10,height), translatedWord, font=fnt, fill=(0, 0, 0))
-        height += 100
-        
-    # Save off the image
-    img.save("images/" + word + '.png')
+    # Append the list of words  to the spreadsheet
+    translatedWords.insert(0, word)
+    worksheet.append(translatedWords)
+
+workbook.save("translatedWords.xlsx")
