@@ -16,7 +16,6 @@ class FinalImageCreater():
         if spreadsheetLocation == "":
             spreadsheetLocation = "translatedWords.xlsx"
         
-        print (spreadsheetLocation)
         self.buildTranslationsDict(spreadsheetLocation)
         arialUnicodeFont = ImageFont.truetype('/Library/Fonts/Arial Unicode.ttf', 100)
 

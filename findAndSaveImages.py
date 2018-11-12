@@ -10,13 +10,17 @@ maxTries = 5
 class ImageDownloader():
 
     subscriptionKey = ""
+    
+    
+    def main(self, spreadsheetLocation):   
+        if spreadsheetLocation == "":
+            spreadsheetLocation = "translatedWords.xlsx"
 
-    def main(self):
         self.subscriptionKey = open("imageSubscriptionKey.txt").read()
         print("I'll print each word when I finish downloading a thumbnail for it")
 
         # Initialize the spreadsheet
-        workbook = load_workbook(filename = "translatedWords.xlsx")
+        workbook = load_workbook(filename = spreadsheetLocation)
         worksheet = workbook["translations"]
 
         for rowNum in range(2, worksheet.max_row + 1):
