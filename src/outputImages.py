@@ -61,7 +61,7 @@ class FinalImageCreater():
     def main(self, spreadsheetLocation):   
     
         if spreadsheetLocation == "":
-            spreadsheetLocation = "translatedWords.xlsx"
+            spreadsheetLocation = "../translatedWords.xlsx"
         
         self.translationsDict = SpreadsheetWrangler.buildTranslationsDict(spreadsheetLocation)
         arialUnicodeFont = ImageFont.truetype('/Library/Fonts/Arial Unicode.ttf', 100)
@@ -74,7 +74,7 @@ class FinalImageCreater():
 
             print("Currently making an image for " + englishWord)
             # Open the thumbnail for this word and get the dimensions
-            foodThumbnailImage = Image.open("foodThumbnails/" + englishWord + ".jpg", "r")
+            foodThumbnailImage = Image.open("../foodThumbnails/" + englishWord + ".jpg", "r")
             # TODO check if image exists!
 
             thumbnailWidth, thumbnailHeight = foodThumbnailImage.size
@@ -108,7 +108,7 @@ class FinalImageCreater():
             outputImage.paste(foodThumbnailImage, offset)
             
             # Save off the image
-            outputImage.save("images/" + englishWord + ".png")
+            outputImage.save("../images/" + englishWord + ".png")
             
             print(englishWord)
             

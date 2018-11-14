@@ -9,11 +9,11 @@ maxTries = 5
 
 class ImageDownloader():
 
-    subscriptionKey = open("imageSubscriptionKey.txt").read()
+    subscriptionKey = open("../subscriptionKeys/imageSubscriptionKey.txt").read()
 
     def main(self, spreadsheetLocation):   
         if spreadsheetLocation == "":
-            spreadsheetLocation = "translatedWords.xlsx"
+            spreadsheetLocation = "../translatedWords.xlsx"
 
         print("I'll print each word when I finish downloading a thumbnail for it")
 
@@ -50,7 +50,7 @@ class ImageDownloader():
         img.thumbnail(size, Image.ANTIALIAS)
         
         # Save the thumbnail
-        imageFilename = "foodThumbnails/" + word + ".jpg"
+        imageFilename = "../foodThumbnails/" + word + ".jpg"
         img.save(imageFilename, "JPEG")
 
     def getImageUrlForWord(self, word, retryTime):

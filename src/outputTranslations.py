@@ -8,7 +8,7 @@ class WordTranslator():
     path = '/translate?api-version=3.0'
 
     def main(self, inputWords):
-        self.subscriptionKey = open("translatorSubscriptionKey.txt").read()
+        self.subscriptionKey = open("../subscriptionKeys/translatorSubscriptionKey.txt").read()
     
         print("I'll print each word when I finish translating it")
 
@@ -19,13 +19,13 @@ class WordTranslator():
 
         # Open input file and combine the languages we're translating to into a params string
         params = "";
-        toLanguages = list(open("toLanguages.txt"))
+        toLanguages = list(open("../toLanguages.txt"))
         for lang in toLanguages[1:]:
             params += "&to=" + lang.lstrip().rstrip()
 
         # Read in all the words and translate them
         if len(inputWords) is 0:
-            wordsToTranslate = list(open("words.txt"))
+            wordsToTranslate = list(open("../words.txt"))
         else:
             wordsToTranslate = inputWords
 
@@ -46,7 +46,7 @@ class WordTranslator():
 
             print(word)
 
-        workbook.save("translatedWords.xlsx")
+        workbook.save("../translatedWords.xlsx")
 
         return translations
         
