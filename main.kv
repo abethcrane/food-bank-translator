@@ -1,33 +1,49 @@
 <Label>:
     font_name: "/Library/Fonts/Arial Unicode.ttf"
+    text_size: self.width, self.height
+
+<Button>:
+    size_hint_y: None
+    text_size: self.width, None
+    padding_x: 5
+    padding_y: 5
+    valign: "middle"
+    halign: "center"
 
 <Thumbnail>:
     image: image.__self__
     label: label.__self__
-    canvas:
-        Color:
-            rgba: 0.7, 0.2, 0.7, 0.5
-        Rectangle:
-            size: root.size
-            pos: root.pos
 
     GridLayout:
-        cols: 2
-        size_hint: None, None
+        size_hint: 1, None
         size: root.size
         pos: root.pos
+        cols: 2
 
-        Label:
-            id: label
-            text: root.name
-            text_size: self.size
-            color: 0, 0, 0, 1
+        GridLayout:
+            size: root.size
+            pos: root.pos
+            rows: 2
+                
+            Label:
+                id: label
+                text: root.name
+                size_hint_y: None
+                text_size: self.size
+                halign: "center"
+                valign: "middle"
+                color: 0, 0, 0, 1
+
+            Button:
+                text: "Download new thumbnail"
+                on_press: root.DownloadNewThumb()
         Image:
             id: image
             source: root.filepath
 
 <Translator>:  
     imageViewer: imageViewer.__self__
+    inputWords: inputWords.__self__
 
     canvas:
         Rectangle:
@@ -36,23 +52,22 @@
             rgba: 1, 0, 0, 1
 
     GridLayout:
-        cols: 3
         size: root.size 
         pos: root.pos
+        cols: 3
 
         GridLayout:
-            rows: 2
             size: root.size
             pos: root.pos
+            rows: 2
 
             TextInput:
-                size_hint: 1, None
-                size: root.size[0], root.size[1] * 0.6
                 id: inputWords
+                size_hint: 1, 1
 
             GridLayout:
                 size_hint: 1, None
-                size: root.size[0], root.size[1] * 0.6
+                size: self.size
                 cols: 3
 
                 Button:
@@ -65,33 +80,39 @@
 
                 Button:
                     text: "Create output images"
-                    #on_press: root.DownloadThumbnails()
+                    on_press: root.OutputImages()
 
         GridLayout:
             id: spreadsheetViewer   
-            cols: 3 
-            pos: root.pos
             size: root.size    
+            pos: root.pos
+            cols: 3 
             
             Label:
                 text: root.lang1
                 color: 0, 0, 0, 1
+                valign: "top"
 
             Label:
                 text: root.lang2
                 color: 0, 0, 0, 1
+                valign: "top"
+
             Label:
                 text: root.lang3
                 color: 0, 0, 0, 1
+                valign: "top"
 
-        GridLayout:
+        RecycleView:
             size: root.size
             pos: root.pos
-            cols: 1
             id: imageViewer
-
-<SpreadsheetViewer>:
-    GridLayout:
-        cols: 3
-        pos: root.pos
-        size: root.size
+            scroll_type: ['bars', 'content']
+            bar_width: 50
+            viewclass: 'Thumbnail'
+            RecycleBoxLayout:
+                default_size: 500, 300
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                orientation: 'vertical'

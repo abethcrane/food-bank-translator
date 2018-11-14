@@ -78,4 +78,4 @@ class WordTranslator():
         return words
 
 if __name__ == '__main__':
-    WordTranslator().main()
+    WordTranslator().main("")

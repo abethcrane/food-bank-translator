@@ -7,6 +7,53 @@ imageWidth = 1400
 padding = 50
 lineSpacingHeight = 100
 
+class SpreadsheetWrangler():
+
+    @staticmethod    
+    # Creates a dictionary of englishWord: [translatedWord, translatedWord, translatedWord]
+    def buildTranslationsDict (spreadsheetLocation):
+        workbook = load_workbook(filename = spreadsheetLocation, read_only=True)
+        worksheet = workbook["translations"]
+
+        dict = {}
+        
+        rows = list(worksheet.rows)
+        for row in rows[1:-1]: #start at 1 to skip the header
+            firstCell = True
+            englishWord = ""
+            translations = []
+            for cell in row:
+                if firstCell:
+                    englishWord = cell.value
+                    firstCell = False
+                else:
+                    translations.append(cell.value)
+
+            if englishWord is None: #it's possible to have blank lines
+                print("I can't add none to the dictionary!")
+                print(translations)
+            else:
+                dict[englishWord] = translations
+        return dict
+
+    @staticmethod
+    def getListsOfWordsPerLanguage(spreadsheetLocation):
+        workbook = load_workbook(filename = spreadsheetLocation, read_only=True)
+        worksheet = workbook["translations"]
+
+        result = [[], [], [], []]
+
+        rows = list(worksheet.rows)
+        for row in rows[1:-1]: #start at 1 to skip the header
+            index = 0
+            for cell in row:
+                if cell.value is not None:
+                    result[index].append(cell.value)
+                index += 1
+
+        return result
+
+
 class FinalImageCreater():
 
     translationsDict = {}
@@ -16,13 +63,16 @@ class FinalImageCreater():
         if spreadsheetLocation == "":
             spreadsheetLocation = "translatedWords.xlsx"
         
-        self.buildTranslationsDict(spreadsheetLocation)
+        self.translationsDict = SpreadsheetWrangler.buildTranslationsDict(spreadsheetLocation)
         arialUnicodeFont = ImageFont.truetype('/Library/Fonts/Arial Unicode.ttf', 100)
 
         print("I'll print each word when I finish creating the output image for it")
 
         for englishWord, translatedWords in self.translationsDict.items():
+            if englishWord is None:
+                continue
 
+            print("Currently making an image for " + englishWord)
             # Open the thumbnail for this word and get the dimensions
             foodThumbnailImage = Image.open("foodThumbnails/" + englishWord + ".jpg", "r")
             # TODO check if image exists!
@@ -61,30 +111,6 @@ class FinalImageCreater():
             outputImage.save("images/" + englishWord + ".png")
             
             print(englishWord)
-            
-    # Creates a dictionary of englishWord: [translatedWord, translatedWord, translatedWord]
-    def buildTranslationsDict (self, spreadsheetLocation):
-        workbook = load_workbook(filename = spreadsheetLocation, read_only=True)
-        worksheet = workbook["translations"]
-        
-        rows = list(worksheet.rows)
-        skipped = False
-        for row in worksheet.rows:
-            # first row is the title, so skip that
-            if not skipped:
-                skipped = True
-                continue
-            
-            firstCell = True
-            englishWord = ""
-            translations = []
-            for cell in row:
-                if firstCell:
-                    englishWord = cell.value
-                    firstCell = False
-                else:
-                    translations.append(cell.value)
-            self.translationsDict[englishWord] = translations
             
 class WordWrapper():
 

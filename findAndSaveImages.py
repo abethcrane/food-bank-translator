@@ -9,13 +9,12 @@ maxTries = 5
 
 class ImageDownloader():
 
-    subscriptionKey = ""
+    subscriptionKey = open("imageSubscriptionKey.txt").read()
 
     def main(self, spreadsheetLocation):   
         if spreadsheetLocation == "":
             spreadsheetLocation = "translatedWords.xlsx"
 
-        self.subscriptionKey = open("imageSubscriptionKey.txt").read()
         print("I'll print each word when I finish downloading a thumbnail for it")
 
         # Initialize the spreadsheet
@@ -25,42 +24,70 @@ class ImageDownloader():
         for rowNum in range(2, worksheet.max_row + 1):
             englishWordCell = "A{}".format(rowNum)
             englishWord = worksheet[englishWordCell].value
-            
-            found = False
-            tryTime = 0
-            while not found and tryTime < maxTries:
-                url = self.getImageUrlForWord(englishWord, tryTime)
-                try:
-                    # Download the image
-                    r = requests.get(url)
-                    img = Image.open(BytesIO(r.content))
-                    found = True
-                except OSError:
-                    # This is okay, we'll just try another one
-                    print(url + " could not be downloaded.")
-                tryTime += 1
-                
-            # Convert the image into a thumbnail
-            size = 256, 256
-            img.thumbnail(size, Image.ANTIALIAS)
-            
-            # Save the thumbnail
-            imageFilename = "foodThumbnails/" + englishWord + ".jpg"
-            img.save(imageFilename, "JPEG")
-            
+
+            if englishWord is None or englishWord is "":
+                continue
+
+            (img, _) = self.getNextImage(englishWord, 0)
+            if img is None:
+                print("I couldn't find an image for " + englishWord)
+                continue
+
+            self.thumbifyAndSave(englishWord, img)
+
             print(englishWord)
         
         print("I'm finished downloading thumbnails")
+
+    @staticmethod
+    def thumbifyAndSave(word, img):
+        if img is None or word is "":
+            print("Cannot save empty image or with empty file names")
+            return
+
+        # Convert the image into a thumbnail
+        size = 256, 256
+        img.thumbnail(size, Image.ANTIALIAS)
+        
+        # Save the thumbnail
+        imageFilename = "foodThumbnails/" + word + ".jpg"
+        img.save(imageFilename, "JPEG")
 
     def getImageUrlForWord(self, word, retryTime):
         #consider prefacing word with 'edible'
         headers = {"Ocp-Apim-Subscription-Key" : self.subscriptionKey}
         params  = {"q": word}
-        response = requests.get(search_url, headers=headers, params=params)
-        response.raise_for_status()
-        search_results = response.json()
-        
-        return search_results["value"][retryTime]["contentUrl"]
-    
+
+        try:
+            response = requests.get(search_url, headers=headers, params=params)
+            response.raise_for_status()
+            search_results = response.json()
+            return search_results["value"][retryTime]["contentUrl"]
+        except requests.exceptions.HTTPError:
+            print("Could not find results for " + word)
+            return ""
+
+    def getImageForWord(self, word, retryTime):
+        url = self.getImageUrlForWord(word, retryTime)
+        img = None
+        try:
+            # Download the image
+            r = requests.get(url)
+            img = Image.open(BytesIO(r.content))
+        except OSError:
+            # This is okay, we'll just try another one
+            print(url + " could not be downloaded.")
+
+        return img
+
+    def getNextImage(self, word, retryTime):
+        img = self.getImageForWord(word, retryTime)
+        while img is None and retryTime < maxTries:
+            retryTime += 1
+            img = self.getImageForWord(word, retryTime)
+
+        return img, retryTime
+
+
 if __name__ == '__main__':
     ImageDownloader().main("")
