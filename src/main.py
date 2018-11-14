@@ -46,11 +46,14 @@ class Translator(Widget):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        wordLists = SpreadsheetWrangler.getListsOfWordsPerLanguage("../translatedWords.xlsx")
-        self.inputWords.text = "\n".join(wordLists[0])
-        self.lang1 = "\n".join(wordLists[1])
-        self.lang2 = "\n".join(wordLists[2])
-        self.lang3 = "\n".join(wordLists[3])
+
+        if Path("../translatedWords.xlsx").is_file():
+            wordLists = SpreadsheetWrangler.getListsOfWordsPerLanguage("../translatedWords.xlsx")
+            self.inputWords.text = "\n".join(wordLists[0])
+            self.lang1 = "\n".join(wordLists[1])
+            self.lang2 = "\n".join(wordLists[2])
+            self.lang3 = "\n".join(wordLists[3])
+            self.DisplayThumbnails()
 
     def DisplayThumbnails(self):
         self.imageViewer.data = []
