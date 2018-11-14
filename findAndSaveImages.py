@@ -10,8 +10,7 @@ maxTries = 5
 class ImageDownloader():
 
     subscriptionKey = ""
-    
-    
+
     def main(self, spreadsheetLocation):   
         if spreadsheetLocation == "":
             spreadsheetLocation = "translatedWords.xlsx"
@@ -23,9 +22,14 @@ class ImageDownloader():
         workbook = load_workbook(filename = spreadsheetLocation)
         worksheet = workbook["translations"]
 
+        translations = [[], [], []]
+
         for rowNum in range(2, worksheet.max_row + 1):
             englishWordCell = "A{}".format(rowNum)
             englishWord = worksheet[englishWordCell].value
+            translations[0].append(worksheet["B{}".format(rowNum)].value)
+            translations[1].append(worksheet["C{}".format(rowNum)].value)
+            translations[2].append(worksheet["D{}".format(rowNum)].value)
             
             found = False
             tryTime = 0
@@ -50,6 +54,10 @@ class ImageDownloader():
             img.save(imageFilename, "JPEG")
             
             print(englishWord)
+        
+        print("I'm finished downloading thumbnails")
+
+        return translations
 
     def getImageUrlForWord(self, word, retryTime):
         #consider prefacing word with 'edible'
@@ -62,4 +70,4 @@ class ImageDownloader():
         return search_results["value"][retryTime]["contentUrl"]
     
 if __name__ == '__main__':
-    ImageDownloader().main()
+    ImageDownloader().main("")

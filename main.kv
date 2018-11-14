@@ -1,0 +1,60 @@
+#:kivy 1.10.1
+
+<Translator>:  
+    imageViewer: imageViewer
+
+    canvas:
+        Rectangle:
+            size: self.size
+        Color:
+            rgba: 1, 0, 0, 1
+
+    GridLayout:
+        cols: 3
+        size: root.size
+
+        GridLayout:
+            cols: 4
+            size: root.size
+
+            TextInput:
+                id: inputWords
+
+            Label:
+                font_size: 70  
+                center_x: root.width
+                top: root.top - 50
+                text: root.lang1
+
+            Label:
+                text: root.lang2
+
+            Label:
+                text: root.lang3
+
+        BoxLayout:
+            orientation: 'vertical'
+
+            Button:
+                text: "Output translations"
+                on_press: root.OutputTranslations(inputWords)
+
+            Button:
+                text: "Download thumbnails"
+                on_press: root.DownloadThumbnails()
+
+            Button:
+                text: "Create output images"
+                on_press: root.DownloadThumbnails()
+
+        RecycleView:
+            GridLayout:
+                cols: 1
+                id: imageViewer
+
+<Thumbnail>:
+    image: image
+
+    Image:
+        id: image
+
