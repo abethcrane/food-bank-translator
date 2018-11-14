@@ -1,7 +1,33 @@
-#:kivy 1.10.1
+<Label>:
+    font_name: "/Library/Fonts/Arial Unicode.ttf"
+
+<Thumbnail>:
+    image: image.__self__
+    label: label.__self__
+    canvas:
+        Color:
+            rgba: 0.7, 0.2, 0.7, 0.5
+        Rectangle:
+            size: root.size
+            pos: root.pos
+
+    GridLayout:
+        cols: 2
+        size_hint: None, None
+        size: root.size
+        pos: root.pos
+
+        Label:
+            id: label
+            text: root.name
+            text_size: self.size
+            color: 0, 0, 0, 1
+        Image:
+            id: image
+            source: root.filepath
 
 <Translator>:  
-    imageViewer: imageViewer
+    imageViewer: imageViewer.__self__
 
     canvas:
         Rectangle:
@@ -11,50 +37,61 @@
 
     GridLayout:
         cols: 3
-        size: root.size
+        size: root.size 
+        pos: root.pos
 
         GridLayout:
-            cols: 4
+            rows: 2
             size: root.size
+            pos: root.pos
 
             TextInput:
+                size_hint: 1, None
+                size: root.size[0], root.size[1] * 0.6
                 id: inputWords
 
+            GridLayout:
+                size_hint: 1, None
+                size: root.size[0], root.size[1] * 0.6
+                cols: 3
+
+                Button:
+                    text: "Output translations"
+                    on_press: root.OutputTranslations(inputWords)
+
+                Button:
+                    text: "Display thumbnails"
+                    on_press: root.DisplayThumbnails()
+
+                Button:
+                    text: "Create output images"
+                    #on_press: root.DownloadThumbnails()
+
+        GridLayout:
+            id: spreadsheetViewer   
+            cols: 3 
+            pos: root.pos
+            size: root.size    
+            
             Label:
-                font_size: 70  
-                center_x: root.width
-                top: root.top - 50
                 text: root.lang1
+                color: 0, 0, 0, 1
 
             Label:
                 text: root.lang2
-
+                color: 0, 0, 0, 1
             Label:
                 text: root.lang3
+                color: 0, 0, 0, 1
 
-        BoxLayout:
-            orientation: 'vertical'
+        GridLayout:
+            size: root.size
+            pos: root.pos
+            cols: 1
+            id: imageViewer
 
-            Button:
-                text: "Output translations"
-                on_press: root.OutputTranslations(inputWords)
-
-            Button:
-                text: "Download thumbnails"
-                on_press: root.DownloadThumbnails()
-
-            Button:
-                text: "Create output images"
-                on_press: root.DownloadThumbnails()
-
-        RecycleView:
-            GridLayout:
-                cols: 1
-                id: imageViewer
-
-<Thumbnail>:
-    image: image
-
-    Image:
-        id: image
-
+<SpreadsheetViewer>:
+    GridLayout:
+        cols: 3
+        pos: root.pos
+        size: root.size

@@ -22,26 +22,21 @@ class ImageDownloader():
         workbook = load_workbook(filename = spreadsheetLocation)
         worksheet = workbook["translations"]
 
-        translations = [[], [], []]
-
         for rowNum in range(2, worksheet.max_row + 1):
             englishWordCell = "A{}".format(rowNum)
             englishWord = worksheet[englishWordCell].value
-            translations[0].append(worksheet["B{}".format(rowNum)].value)
-            translations[1].append(worksheet["C{}".format(rowNum)].value)
-            translations[2].append(worksheet["D{}".format(rowNum)].value)
             
             found = False
             tryTime = 0
             while not found and tryTime < maxTries:
+                url = self.getImageUrlForWord(englishWord, tryTime)
                 try:
-                    url = self.getImageUrlForWord(englishWord, tryTime)
                     # Download the image
                     r = requests.get(url)
                     img = Image.open(BytesIO(r.content))
                     found = True
                 except OSError:
-                    # is okayy
+                    # This is okay, we'll just try another one
                     print(url + " could not be downloaded.")
                 tryTime += 1
                 
@@ -56,8 +51,6 @@ class ImageDownloader():
             print(englishWord)
         
         print("I'm finished downloading thumbnails")
-
-        return translations
 
     def getImageUrlForWord(self, word, retryTime):
         #consider prefacing word with 'edible'

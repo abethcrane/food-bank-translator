@@ -29,6 +29,8 @@ class WordTranslator():
         else:
             wordsToTranslate = inputWords
 
+        translations = [[], [], []]
+
         for word in wordsToTranslate:
             word = word.lstrip().rstrip().capitalize()
             result = self.getTranslationsFromServer(params, word)
@@ -38,9 +40,15 @@ class WordTranslator():
             translatedWords.insert(0, word)
             worksheet.append(translatedWords)
 
+            translations[0].append(translatedWords[1])
+            translations[1].append(translatedWords[2])
+            translations[2].append(translatedWords[3])
+
             print(word)
 
         workbook.save("translatedWords.xlsx")
+
+        return translations
         
     def getTranslationsFromServer (self, params, word):
         requestBody = [{
