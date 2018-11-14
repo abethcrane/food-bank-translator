@@ -10,14 +10,20 @@ Requirements:
 - <a href="https://pillow.readthedocs.io">Pillow</a> (for creating images)
 - <a href="https://openpyxl.readthedocs.io/">OpenPyXL</a> (for interacting with spreadsheets)
 - <a href="http://docs.python-requests.org/en/master/">Requests</a> (for the bing image search code to work)
-- <a href="https://pyforms-gui.readthedocs.io/en/v4/overview.html">Pyforms</a> (for the UI)
+- <a href="https://kivy.org/doc/stable/gettingstarted/intro.html#">Kivy</a> (for the UI)
 - An azure subscription key to use the translator api (https://azure.microsoft.com/en-us/services/cognitive-services/translator-text-api/)
 - An azure subscription key to use Bing image search (https://azure.microsoft.com/en-us/services/cognitive-services/bing-image-search-api/)
 - Arial (or swap the font to one you have)
 
-To use:
-- Ensure you have a folder called **foodThumbnails** and one called **images**, in the same dir as your input files and scripts
-- Run `python3 getLanguageCodes.py` (I've included the results here in languageCodes.txt) to see the language codes available
+To use gui:
+<img src="https://github.com/abethcrane/food-bank-translator/blob/master/appScreenshot.png">
+- Install kivy
+- Run main.py
+
+To use command line:
+<img src="https://github.com/abethcrane/food-bank-translator/blob/master/commandLineScreenshot.png">
+- Ensure you have a folder called **foodThumbnails** and one called **images**, in the same dir as your input files (sibling dirs with **src**).
+- Run `python3 getLanguageCodes.py` (I've included the results here in **languageCodes.txt**) to see the language codes available
 - Modify the **toLanguages.txt** file to include whichever languages you desire
 - Modify the **words.txt** to include the words you'd like to translate
 - Create a file called translatorSubscriptionKey.txt and enter your azure translation subscription key in
@@ -30,4 +36,5 @@ To use:
 
 Quirks:
 - Currently expects a newline at the start of the toLanguages file
-- Currently assumes foodThumbnails images are max 256x256 and .jpg, with the same name (+casing) as the english word in the spreadsheet
+- Currently assumes foodThumbnails images are max 256x256 and with the same name (+casing) as the english word in the spreadsheet
+- The main app assumes there are 4 languages (1 input + 3 output)
