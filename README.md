@@ -5,7 +5,7 @@ Written in Python3, using Pillow for images. Uses Microsoft Cognitive Services f
 
 Still a WIP, working with <a href="http://www.pmfb.org/">a Seattle organization</a>.
 
-Requirements:
+<h2>Requirements</h2>
 - Python 3
 - <a href="https://pillow.readthedocs.io">Pillow</a> (for creating images)
 - <a href="https://openpyxl.readthedocs.io/">OpenPyXL</a> (for interacting with spreadsheets)
@@ -15,13 +15,14 @@ Requirements:
 - An azure subscription key to use Bing image search (https://azure.microsoft.com/en-us/services/cognitive-services/bing-image-search-api/)
 - Arial (or swap the font to one you have)
 
-To use gui:
-<img src="https://github.com/abethcrane/food-bank-translator/blob/master/appScreenshot.png">
+<h2>Usage instructions</h2>
+<h3>Gui</h3>
+<img src="https://raw.githubusercontent.com/abethcrane/food-bank-translator/master/appScreenshot.png">
 - Install kivy
 - Run main.py
 
-To use command line:
-<img src="https://github.com/abethcrane/food-bank-translator/blob/master/commandLineScreenshot.png">
+<h3>To use command line</h3>
+<img src="https://raw.githubusercontent.com/abethcrane/food-bank-translator/master/commandLineScreenshot.png">
 - Ensure you have a folder called **foodThumbnails** and one called **images**, in the same dir as your input files (sibling dirs with **src**).
 - Run `python3 getLanguageCodes.py` (I've included the results here in **languageCodes.txt**) to see the language codes available
 - Modify the **toLanguages.txt** file to include whichever languages you desire
@@ -34,7 +35,10 @@ To use command line:
 - Open the **foodThumbnails** folder and check the images. If any images aren't suitable, replace them with new ones of the same name
 - Run `python3 outputImages.py` - this will open the spreadsheet and output an image for each word, with the translations + thumbnail image
 
-Quirks:
+<h2>Quirks</h2>
 - Currently expects a newline at the start of the toLanguages file
 - Currently assumes foodThumbnails images are max 256x256 and with the same name (+casing) as the english word in the spreadsheet
 - The main app assumes there are 4 languages (1 input + 3 output)
+
+<h2>Authors and Contributors</h2>
+@abethcrane wrote this in late 2018 after volunteering with a foodbank and being asked to manually create these images
