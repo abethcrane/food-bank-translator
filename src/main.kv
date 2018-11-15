@@ -46,7 +46,7 @@
         size: root.size
         pos: root.pos
         cols: 1 + root.numOutputLangs + 1 # input, output, image
-        row: 1
+        row: 1 # The spreadsheet itself has: 1 + root.numWords + 1 # header, words, new line for extra words 
 
         TextInput:
             text: root.inputWord
@@ -54,7 +54,6 @@
 
 <Translator>:  
     spreadsheetViewer: spreadsheetViewer.__self__
-
     canvas:
         Rectangle:
             size: self.size
