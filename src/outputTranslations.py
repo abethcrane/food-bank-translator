@@ -8,19 +8,16 @@ class WordTranslator():
     path = '/translate?api-version=3.0'
 
     def main(self, inputWords):
-
         # Read in all the words and translate them
         if len(inputWords) is 0:
             wordsToTranslate = list(open("../words.txt"))
         else:
             wordsToTranslate = inputWords
 
-        dict = self.generateTranslationsDict(inputWords)
+        dict = self.generateTranslationsDict(wordsToTranslate)
         self.writeDictToSpreadsheet(dict)
         
     def generateTranslationsDict(self, inputWords):
-        print ("I'm generating a translation dict for these words. I'll print each word when I finish translating it")
-        print(inputWords)
         # Open input file and combine the languages we're translating to into a params string
         params = ""
         toLanguages = list(open("../toLanguages.txt"))
@@ -89,4 +86,4 @@ class WordTranslator():
         return words
 
 if __name__ == '__main__':
-    WordTranslator().main("")
+    WordTranslator().main([])
