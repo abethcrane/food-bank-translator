@@ -8,11 +8,11 @@ class WordTranslator():
     path = '/translate?api-version=3.0'
 
     def main(self, inputWords):
-        print("I'll print each word when I finish translating it")
         dict = self.generateTranslationsDict(inputWords)
         self.writeDictToSpreadsheet(dict)
         
     def generateTranslationsDict(self, inputWords):
+        print ("I'm generating a translation dict, I'll print each word when I finish translating it")
         # Open input file and combine the languages we're translating to into a params string
         params = ""
         toLanguages = list(open("../toLanguages.txt"))
@@ -29,8 +29,15 @@ class WordTranslator():
 
         for word in wordsToTranslate:
             word = word.lstrip().rstrip().capitalize()
-            result = self.getTranslationsFromServer(params, word)
-            translatedWords = self.getWordsFromResult(result)
+
+            # Empty words get an empty response
+            if word is None or word is "":
+                translatedWords = []
+                for lang in toLanguages[1:]:
+                    translatedWords.append("")
+            else:
+                result = self.getTranslationsFromServer(params, word)
+                translatedWords = self.getWordsFromResult(result)
 
             translations[word] = translatedWords
 

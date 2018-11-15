@@ -2,6 +2,7 @@
 
 from kivy.app import App
 from kivy.clock import Clock
+from kivy.core.window import Window
 from kivy.properties import AliasProperty, StringProperty, NumericProperty
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
@@ -17,45 +18,70 @@ from outputImages import FinalImageCreater, SpreadsheetWrangler
 from findAndSaveImages import ImageDownloader
 
 class Spreadsheet():
-    rows = []
+
+    def __init__(self):
+        self.rows = []
 
     def getInputWords(self):
+        print ("Getting input words")
         inputWords = []
         for row in self.rows:
+            print (row.inputWord)
             inputWords.append(row.inputWord)
         return inputWords
 
     def buildDict(self):
         translationsDict = {}
         for row in self.rows:
-            translationsDict[row.inputWord] = row.outputWordsList
+            translatedWords = []
+            for instance, word in row.instanceToValue.items():
+                translatedWords.append(word)
+            translationsDict[row.inputWord] = translatedWords
+
+        print(translationsDict)
         return translationsDict
 
 class SpreadsheetRow(Widget):
-    gridLayout = None
+
     numOutputLangs = NumericProperty(3)
-    inputWord = StringProperty("")
-    outputWordsList = []
-    outputWordProperties = []
-    imgFilepath = StringProperty("")
-    parentSheet = None
 
-    def __init__(self,**kwargs):
+    def __init__(self, **kwargs):
+        print(kwargs)
+        self.gridLayout = None
+        self.outputWordsList = []
+        self.imgFilepath = StringProperty("")
+        self.inputWord = StringProperty("")
+        self.parentSheet = None
+        self.instanceToValue = {}
+        
+        self.parentSheet = kwargs.pop("parentSheet")
+        self.inputWord = kwargs.pop("inputWord")
+        self.outputWordsList = kwargs.pop("outputWords")
+        self.imgFilepath = kwargs.pop("imgFilepath")
+
+        print("I'm initializing a spreadsheet row with ", self.inputWord, " and ", self.outputWordsList)
+
         super().__init__(**kwargs)
-        # delay the end of the initialization to the next frame, once the widget are already created
-        # and the properties properly initialized
-        Clock.schedule_once(self.finish_init,0)
 
-    def finish_init(self, dt):
+        # Add the english word column
+        inputWordWidget = TextInput(text=self.inputWord, multiline=False)
+        inputWordWidget.bind(text=self.onInputWordEdit)
+        self.gridLayout.add_widget(inputWordWidget)
+
         # Add on a text input for each output language
-        print ("finishing init!")
         if self.parentSheet is not None:
             self.parentSheet.rows.append(self)
+        else:
+            print("my parent sheet was none, weird")
 
         self.numOutputLangs = len(self.outputWordsList)
+
+        # Create input cells for each output language
         for i in range (0, self.numOutputLangs):
-            #self.outputWordProperties.append(StringProperty(self.outputWordsList[i]))
-            self.gridLayout.add_widget(TextInput(text=self.outputWordsList[i]))
+            textInput = TextInput(text=self.outputWordsList[i], multiline=False)
+            textInput.bind(text=self.onTranslatedWordEdit)
+            self.gridLayout.add_widget(textInput)
+            self.instanceToValue[textInput] = self.outputWordsList[i]
 
         # Add in the thumbnail cell
         newThumb = Thumbnail()
@@ -63,11 +89,17 @@ class SpreadsheetRow(Widget):
         newThumb.filepath = self.imgFilepath
         self.gridLayout.add_widget(newThumb)
 
-        #self.bind words something something
+    def onInputWordEdit(self, instance, value):
+        self.inputWord = value
+        print ("input word = " + value)
+
+    def onTranslatedWordEdit(self, instance, value):
+        self.instanceToValue[instance] = value
+        print("translations for " + self.inputWord)
+        print(self.instanceToValue)
 
 class Thumbnail(Widget):
     image = None
-    label = None
     name = StringProperty("")
     filepath = StringProperty("")
     tryTime = 0
@@ -93,36 +125,29 @@ class Translator(Widget):
     spreadsheet = Spreadsheet()
     spreadsheetViewer = None 
 
-    lang1 = StringProperty("")
-    lang2 = StringProperty("")
-    lang3 = StringProperty("")
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
         if Path("../translatedWords.xlsx").is_file():
             self.ImportFromSpreadsheet()
-            self.CreateEmptySpreadsheetRow()
+            #self.CreateEmptySpreadsheetRow()
 
     def OutputImages(self):
         FinalImageCreater().main("")
 
-    def OutputTranslations(self):
-        inputWords = ["apples", "bananas", "bread"]
-        translations = WordTranslator().generateTranslationsDict(inputWords)
-        self.lang1 = "\n".join(translations[0])
-        self.lang2 = "\n".join(translations[1])
-        self.lang3 = "\n".join(translations[2])
-
-        ImageDownloader().main("")
-
     def GenerateTranslations(self):
+        #self.spreadsheetViewer.data = []
+        self.spreadsheetViewer.clear_widgets()
+        self.spreadsheet.rows = []
+        #Clock.schedule_once(self.GenerateTranslations2,0)
+
+        #def GenerateTranslations2(self, i):
         inputWords = self.spreadsheet.getInputWords()
+        print ("here are the input words I'm getting translations for ", inputWords)
         translationsDict = WordTranslator().generateTranslationsDict(inputWords)
-
+        print(translationsDict)
         self.CreateSpreadsheetRows(translationsDict)
+        ImageDownloader().getImagesForWords(list(translationsDict.keys()))
 
-        ImageDownloader().main("")
 
     # takes contents on screen and creates a spreadsheet
     def ExportToSpreadsheet(self):
@@ -133,14 +158,19 @@ class Translator(Widget):
         self.CreateSpreadsheetRows(SpreadsheetWrangler.buildTranslationsDict("../translatedWords.xlsx"))
 
     def CreateEmptySpreadsheetRow(self):
-        self.spreadsheetViewer.data.append({"parentSheet": self.spreadsheet, "inputWord": "", 'outputWordsList': ["", "", ""], "imgFilepath": ""})
+        #dataList = self.spreadsheetViewer.data
+        #self.spreadsheetViewer.data = []
+        #TODO: hardcode the correct number of output words, not just arbitrarily 3
+        #dataList.append({"parentSheet": self.spreadsheet, "inputWord": "", 'outputWordsList': ["", "", ""], "imgFilepath": ""})
+        #self.spreadsheetViewer.data = dataList
+        newRow = SpreadsheetRow(parentSheet=self.spreadsheet, inputWord="", outputWords=["", "", ""], imgFilepath="")
+        self.spreadsheetViewer.add_widget(newRow)
 
     def CreateSpreadsheetRows(self, translationsDict):
-        self.spreadsheetViewer.data = []
+        self.spreadsheetViewer.clear_widgets() # .data = []
+        self.spreadsheet.rows = []
     
         for inputWord, outputWords in translationsDict.items():
-            print ("Creating spreadsheet row for " + inputWord)
-
             # Try to come up with an appropriate image path
             filepath = "../foodThumbnails/" + inputWord + ".jpg"
             if not Path(filepath).is_file():
@@ -148,11 +178,15 @@ class Translator(Widget):
                 if not Path(filepath).is_file():
                     continue
 
+            print ("adding " + inputWord  + " to the spreadsheetViewer, with: ", outputWords)
             # Add the row to the spreadsheet viewer
-            self.spreadsheetViewer.data.append({"parentSheet": self.spreadsheet, "inputWord": inputWord, 'outputWordsList': outputWords, "imgFilepath": filepath})
+            newRow = SpreadsheetRow(parentSheet=self.spreadsheet, inputWord=inputWord, outputWords=outputWords, imgFilepath=filepath)
+            self.spreadsheetViewer.add_widget(newRow)
+            #self.spreadsheetViewer.data.append({"parentSheet": self.spreadsheet, "inputWord": inputWord, 'outputWordsList': outputWords, "imgFilepath": filepath})
 
 class MainApp(App):
     def build(self):
+        Window.maximize()
         return Translator()
 
 if __name__ == '__main__':

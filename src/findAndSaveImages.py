@@ -6,6 +6,7 @@ from io import BytesIO
 
 search_url = "https://api.cognitive.microsoft.com/bing/v7.0/images/search"
 maxTries = 5
+resultsPerQuery = 35
 
 class ImageDownloader():
 
@@ -38,6 +39,20 @@ class ImageDownloader():
             print(englishWord)
         
         print("I'm finished downloading thumbnails")
+
+    def getImagesForWords(self, words):
+        print ("I'm getting the images for some words - I'll print each one's name as I go")
+        for word in words:
+            if word is None or word is "":
+                continue
+
+            (img, _) = self.getNextImage(word, 0)
+            if img is None:
+                print("I couldn't find an image for " + word)
+                continue
+
+            self.thumbifyAndSave(word, img)
+            print(word)
 
     @staticmethod
     def thumbifyAndSave(word, img):
@@ -81,6 +96,8 @@ class ImageDownloader():
         return img
 
     def getNextImage(self, word, n):
+        if (n < 0):
+            n = 0
         img = self.getNthImageForWord(word, n)
         retryTime = 0
         while img is None and retryTime < maxTries:
@@ -91,6 +108,8 @@ class ImageDownloader():
         return img, n
 
     def getPrevImage(self, word, n):
+        if (n < 0):
+            n = resultsPerQuery - 1
         img = self.getNthImageForWord(word, n)
         retryTime = 0
         while img is None and retryTime < maxTries:

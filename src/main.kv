@@ -15,7 +15,7 @@
 <Thumbnail>:
     image: image.__self__
 
-    GridLayout:
+    GridLayout: #Displays the image above the 2 buttons
         size_hint: 1, None
         size: root.size
         pos: root.pos
@@ -25,32 +25,30 @@
             id: image
             source: root.filepath
 
-        GridLayout:
+        GridLayout: # Buttons for changing the image
             id: newThumbButtons
-            size: root.size
+            size_hint: 1, None
+            size: self.size
             pos: root.pos
             cols: 2
 
             Button:
-                text: "↻"
-                on_press: root.DownloadNewThumb()
-            Button:
                 text: "↺"
                 on_press: root.DownloadPrevThumb()
+            Button:
+                text: "↻"
+                on_press: root.DownloadNewThumb()
 
 <SpreadsheetRow>:
-    gridLayout: gridLayout
+    gridLayout: gridLayout.__self__
 
-    GridLayout:
+    GridLayout: #Grid layout that holds the entire row of data
         id: gridLayout
+        size_hint: 1, None
         size: root.size
         pos: root.pos
         cols: 1 + root.numOutputLangs + 1 # input, output, image
         row: 1 # The spreadsheet itself has: 1 + root.numWords + 1 # header, words, new line for extra words 
-
-        TextInput:
-            text: root.inputWord
-            size_hint: 1, 1
 
 <Translator>:  
     spreadsheetViewer: spreadsheetViewer.__self__
@@ -66,24 +64,22 @@
         pos: root.pos
         rows: 2 
 
-        RecycleView:
-            id: spreadsheetViewer
+        ScrollView: # spreadsheet
             size: root.size
             pos: root.pos
             scroll_type: ['bars', 'content']
             bar_width: 50
-            viewclass: 'SpreadsheetRow'
-            RecycleBoxLayout:
-                default_size: 1000, 300
+            BoxLayout:
+                id: spreadsheetViewer
                 default_size_hint: 1, None
-                size_hint_y: None
-                height: self.minimum_height
+                size: root.size
+                pos: root.pos
                 orientation: 'vertical'
 
         GridLayout: #buttons
             size_hint: 1, None
             size: self.size
-            cols: 4
+            rows: 1
 
             Button:
                 text: "Import from spreadsheet"
@@ -100,3 +96,7 @@
             Button:
                 text: "Create output images"
                 on_press: root.OutputImages()
+
+            Button:
+                text: "Add new word"
+                on_press: root.CreateEmptySpreadsheetRow()
