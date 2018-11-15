@@ -14,14 +14,8 @@
     valign: "middle"
     halign: "center"
 
-<TextInput>:
-    size_hint_y: None
-    #text_size: self.width, self.height
-    size_y: 30
 
 <Thumbnail>:
-    size_hint: None, None
-    size: 300, 200
     image: image.__self__
 
     GridLayout: #Displays the image above the 2 buttons
@@ -36,8 +30,7 @@
 
         GridLayout: # Buttons for changing the image
             id: newThumbButtons
-            #size_hint: 1, None
-            size: self.size
+            size: root.size
             pos: root.pos
             cols: 2
 
@@ -51,7 +44,6 @@
 <SpreadsheetRow>:
     gridLayout: gridLayout.__self__
     size_hint_y: None
-    size_y: 300
 
     GridLayout: #Grid layout that holds the entire row of data
         id: gridLayout
@@ -91,7 +83,7 @@
 
         GridLayout: #buttons
             size_hint: 1, None
-            size: self.size
+            height: self.minimum_height
             rows: 1
 
             Button:
