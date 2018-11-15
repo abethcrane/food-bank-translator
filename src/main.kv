@@ -24,13 +24,36 @@
         Image:
             id: image
             source: root.filepath
-        Button:
-            text: "Download new thumbnail"
-            on_press: root.DownloadNewThumb()
+
+        GridLayout:
+            id: newThumbButtons
+            size: root.size
+            pos: root.pos
+            cols: 2
+
+            Button:
+                text: "↻"
+                on_press: root.DownloadNewThumb()
+            Button:
+                text: "↺"
+                on_press: root.DownloadPrevThumb()
+
+<SpreadsheetRow>:
+    gridLayout: gridLayout
+
+    GridLayout:
+        id: gridLayout
+        size: root.size
+        pos: root.pos
+        cols: 1 + root.numOutputLangs + 1 # input, output, image
+        row: 1
+
+        TextInput:
+            text: root.inputWord
+            size_hint: 1, 1
 
 <Translator>:  
-    imageViewer: imageViewer.__self__
-    inputWords: inputWords.__self__
+    spreadsheetViewer: spreadsheetViewer.__self__
 
     canvas:
         Rectangle:
@@ -38,68 +61,43 @@
         Color:
             rgba: 1, 0, 0, 1
 
-    GridLayout:
+    GridLayout: # spreadsheet vs buttons
+        id: appGrid
         size: root.size 
         pos: root.pos
         rows: 2 
 
-        GridLayout:
+        RecycleView:
+            id: spreadsheetViewer
             size: root.size
             pos: root.pos
-            rows: 2
+            scroll_type: ['bars', 'content']
+            bar_width: 50
+            viewclass: 'SpreadsheetRow'
+            RecycleBoxLayout:
+                default_size: 1000, 300
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                orientation: 'vertical'
 
-            GridLayout:
-                id: spreadsheetViewer   
-                size: root.size    
-                pos: root.pos
-                cols: 5
-                
-                TextInput:
-                    id: inputWords
-                    size_hint: 1, 1
+        GridLayout: #buttons
+            size_hint: 1, None
+            size: self.size
+            cols: 4
 
-                TextInput:
-                    text: root.lang1
-                    color: 0, 0, 0, 1
-                    valign: "top"
+            Button:
+                text: "Import from spreadsheet"
+                on_press: root.ImportFromSpreadsheet()
 
-                TextInput:
-                    text: root.lang2
-                    color: 0, 0, 0, 1
-                    valign: "top"
+            Button:
+                text: "Generate translations"
+                on_press: root.GenerateTranslations()
 
-                TextInput:
-                    text: root.lang3
-                    color: 0, 0, 0, 1
-                    valign: "top"
+            Button:
+                text: "Export to spreadsheet"
+                on_press: root.ExportToSpreadsheet()
 
-                RecycleView:
-                    size: root.size
-                    pos: root.pos
-                    id: imageViewer
-                    scroll_type: ['bars', 'content']
-                    bar_width: 50
-                    viewclass: 'Thumbnail'
-                    RecycleBoxLayout:
-                        default_size: 500, 300
-                        default_size_hint: 1, None
-                        size_hint_y: None
-                        height: self.minimum_height
-                        orientation: 'vertical'
-
-            GridLayout:
-                size_hint: 1, None
-                size: self.size
-                cols: 3
-
-                Button:
-                    text: "Output translations"
-                    on_press: root.OutputTranslations(inputWords)
-
-                Button:
-                    text: "Display thumbnails"
-                    on_press: root.DisplayThumbnails()
-
-                Button:
-                    text: "Create output images"
-                    on_press: root.OutputImages()
+            Button:
+                text: "Create output images"
+                on_press: root.OutputImages()

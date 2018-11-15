@@ -67,8 +67,8 @@ class ImageDownloader():
             print("Could not find results for " + word)
             return ""
 
-    def getImageForWord(self, word, retryTime):
-        url = self.getImageUrlForWord(word, retryTime)
+    def getNthImageForWord(self, word, n):
+        url = self.getImageUrlForWord(word, n)
         img = None
         try:
             # Download the image
@@ -80,13 +80,25 @@ class ImageDownloader():
 
         return img
 
-    def getNextImage(self, word, retryTime):
-        img = self.getImageForWord(word, retryTime)
+    def getNextImage(self, word, n):
+        img = self.getNthImageForWord(word, n)
+        retryTime = 0
         while img is None and retryTime < maxTries:
             retryTime += 1
-            img = self.getImageForWord(word, retryTime)
+            n += 1
+            img = self.getNthImageForWord(word, n)
 
-        return img, retryTime
+        return img, n
+
+    def getPrevImage(self, word, n):
+        img = self.getNthImageForWord(word, n)
+        retryTime = 0
+        while img is None and retryTime < maxTries:
+            retryTime += 1
+            n -= 1
+            img = self.getNthImageForWord(word, n)
+
+        return img, n
 
 
 if __name__ == '__main__':

@@ -3,22 +3,18 @@ from openpyxl import Workbook
 
 class WordTranslator():
 
-    subscriptionKey = ""
+    subscriptionKey = open("../subscriptionKeys/translatorSubscriptionKey.txt").read()
     host = 'api.cognitive.microsofttranslator.com'
     path = '/translate?api-version=3.0'
 
     def main(self, inputWords):
-        self.subscriptionKey = open("../subscriptionKeys/translatorSubscriptionKey.txt").read()
-    
         print("I'll print each word when I finish translating it")
-
-        # Initialize the spreadsheet
-        workbook = Workbook(write_only=True)
-        worksheet = workbook.create_sheet("translations")
-        worksheet.append(["English", "Simplified Chinese", "Spanish", "Vietnamese"])
-
+        dict = self.generateTranslationsDict(inputWords)
+        self.writeDictToSpreadsheet(dict)
+        
+    def generateTranslationsDict(self, inputWords):
         # Open input file and combine the languages we're translating to into a params string
-        params = "";
+        params = ""
         toLanguages = list(open("../toLanguages.txt"))
         for lang in toLanguages[1:]:
             params += "&to=" + lang.lstrip().rstrip()
@@ -29,27 +25,33 @@ class WordTranslator():
         else:
             wordsToTranslate = inputWords
 
-        translations = [[], [], []]
+        translations = {}
 
         for word in wordsToTranslate:
             word = word.lstrip().rstrip().capitalize()
             result = self.getTranslationsFromServer(params, word)
             translatedWords = self.getWordsFromResult(result)
-            
-            # Append the list of words  to the spreadsheet
-            translatedWords.insert(0, word)
-            worksheet.append(translatedWords)
 
-            translations[0].append(translatedWords[1])
-            translations[1].append(translatedWords[2])
-            translations[2].append(translatedWords[3])
+            translations[word] = translatedWords
 
             print(word)
 
+        return translations
+
+    def writeDictToSpreadsheet(self, translationsDict):
+        # Initialize the spreadsheet
+        workbook = Workbook(write_only=True)
+        worksheet = workbook.create_sheet("translations")
+        worksheet.append(["English", "Simplified Chinese", "Spanish", "Vietnamese"])
+
+        # Append the list of words  to the spreadsheet
+        for inputWord, outputWords in translationsDict.items():
+            translatedWords = outputWords
+            translatedWords.insert(0, inputWord)
+            worksheet.append(translatedWords)
+
         workbook.save("../translatedWords.xlsx")
 
-        return translations
-        
     def getTranslationsFromServer (self, params, word):
         requestBody = [{
             'Text' : word,
