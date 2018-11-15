@@ -3,20 +3,29 @@
 
 <Label>:
     text_size: self.width, self.height
+    size: self.texture_size
 
 <Button>:
     size_hint_y: None
     text_size: self.width, None
+    size: self.texture_size
     padding_x: 5
     padding_y: 5
     valign: "middle"
     halign: "center"
 
+<TextInput>:
+    size_hint_y: None
+    #text_size: self.width, self.height
+    size_y: 30
+
 <Thumbnail>:
+    size_hint: None, None
+    size: 300, 200
     image: image.__self__
 
     GridLayout: #Displays the image above the 2 buttons
-        size_hint: 1, None
+        size_hint: None, None
         size: root.size
         pos: root.pos
         rows: 2
@@ -27,7 +36,7 @@
 
         GridLayout: # Buttons for changing the image
             id: newThumbButtons
-            size_hint: 1, None
+            #size_hint: 1, None
             size: self.size
             pos: root.pos
             cols: 2
@@ -41,10 +50,11 @@
 
 <SpreadsheetRow>:
     gridLayout: gridLayout.__self__
+    size_hint_y: None
+    size_y: 300
 
     GridLayout: #Grid layout that holds the entire row of data
         id: gridLayout
-        size_hint: 1, None
         size: root.size
         pos: root.pos
         cols: 1 + root.numOutputLangs + 1 # input, output, image
@@ -69,12 +79,15 @@
             pos: root.pos
             scroll_type: ['bars', 'content']
             bar_width: 50
-            BoxLayout:
+            do_scroll_x: False
+            GridLayout:
                 id: spreadsheetViewer
-                default_size_hint: 1, None
-                size: root.size
+                size_hint_y: None
+                height: self.minimum_height
+                cols: 1
                 pos: root.pos
-                orientation: 'vertical'
+                padding: 10
+                spacing: 10
 
         GridLayout: #buttons
             size_hint: 1, None

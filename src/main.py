@@ -78,7 +78,8 @@ class SpreadsheetRow(Widget):
             self.instanceToValue[textInput] = self.outputWordsList[i]
 
         # Add in the thumbnail cell
-        newThumb = Thumbnail()
+        newThumb = Thumbnail() #size_hint=(None, None), width=700, height=400
+
         newThumb.name = self.inputWord
         newThumb.filepath = self.imgFilepath
         self.gridLayout.add_widget(newThumb)
