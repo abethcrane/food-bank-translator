@@ -8,16 +8,6 @@ class WordTranslator():
     path = '/translate?api-version=3.0'
 
     def main(self, inputWords):
-        dict = self.generateTranslationsDict(inputWords)
-        self.writeDictToSpreadsheet(dict)
-        
-    def generateTranslationsDict(self, inputWords):
-        print ("I'm generating a translation dict, I'll print each word when I finish translating it")
-        # Open input file and combine the languages we're translating to into a params string
-        params = ""
-        toLanguages = list(open("../toLanguages.txt"))
-        for lang in toLanguages[1:]:
-            params += "&to=" + lang.lstrip().rstrip()
 
         # Read in all the words and translate them
         if len(inputWords) is 0:
@@ -25,9 +15,21 @@ class WordTranslator():
         else:
             wordsToTranslate = inputWords
 
+        dict = self.generateTranslationsDict(inputWords)
+        self.writeDictToSpreadsheet(dict)
+        
+    def generateTranslationsDict(self, inputWords):
+        print ("I'm generating a translation dict for these words. I'll print each word when I finish translating it")
+        print(inputWords)
+        # Open input file and combine the languages we're translating to into a params string
+        params = ""
+        toLanguages = list(open("../toLanguages.txt"))
+        for lang in toLanguages[1:]:
+            params += "&to=" + lang.lstrip().rstrip()
+
         translations = {}
 
-        for word in wordsToTranslate:
+        for word in inputWords:
             word = word.lstrip().rstrip().capitalize()
 
             # Empty words get an empty response
