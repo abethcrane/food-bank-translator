@@ -7,7 +7,7 @@ path = '/languages?api-version=3.0'
 
 output_path = 'languageCodes.txt'
 
-def getAvailableLanguages():
+def get_available_languages():
     headers = {'Ocp-Apim-Subscription-Key': subscriptionKey}
 
     conn = http.client.HTTPSConnection(host)
@@ -15,7 +15,7 @@ def getAvailableLanguages():
     response = conn.getresponse()
     return response.read()
     
-def cleanupResults(results):
+def cleanup_results(results):
     jsondata = json.loads(result)
     printLines = []
     for languageCode in jsondata["translation"]:
@@ -24,8 +24,8 @@ def cleanupResults(results):
     
     return "\n".join(printLines)
 
-result = getAvailableLanguages()
-niceResults = cleanupResults(result)
+result = get_available_languages()
+niceResults = cleanup_results(result)
 
 f = open(output_path, 'w')
 f.write(niceResults)  

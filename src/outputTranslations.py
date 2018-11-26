@@ -8,16 +8,20 @@ class WordTranslator():
     path = '/translate?api-version=3.0'
 
     def main(self, inputWords):
+        print("I'll print each word when I finish translating it")
+
         # Read in all the words and translate them
         if len(inputWords) is 0:
             wordsToTranslate = list(open("../words.txt"))
         else:
             wordsToTranslate = inputWords
 
-        dict = self.generateTranslationsDict(wordsToTranslate)
-        self.writeDictToSpreadsheet(dict)
+        dict = self.generate_translations_dict(wordsToTranslate)
+        self.write_dict_to_spreadsheet(dict)
+
+        print ("I'm finished translating words")
         
-    def generateTranslationsDict(self, inputWords):
+    def generate_translations_dict(self, inputWords):
         # Open input file and combine the languages we're translating to into a params string
         params = ""
         toLanguages = list(open("../toLanguages.txt"))
@@ -35,8 +39,8 @@ class WordTranslator():
                 for lang in toLanguages[1:]:
                     translatedWords.append("")
             else:
-                result = self.getTranslationsFromServer(params, word)
-                translatedWords = self.getWordsFromResult(result)
+                result = self.get_translations_from_server(params, word)
+                translatedWords = self.get_words_from_result(result)
 
             translations[word] = translatedWords
 
@@ -44,7 +48,7 @@ class WordTranslator():
 
         return translations
 
-    def writeDictToSpreadsheet(self, translationsDict):
+    def write_dict_to_spreadsheet(self, translationsDict):
         # Initialize the spreadsheet
         workbook = Workbook(write_only=True)
         worksheet = workbook.create_sheet("translations")
@@ -58,7 +62,7 @@ class WordTranslator():
 
         workbook.save("../translatedWords.xlsx")
 
-    def getTranslationsFromServer (self, params, word):
+    def get_translations_from_server (self, params, word):
         requestBody = [{
             'Text' : word,
         }]
@@ -77,7 +81,7 @@ class WordTranslator():
         return response.read()
     
     @staticmethod
-    def getWordsFromResult(result):
+    def get_words_from_result(result):
         jsonData = json.loads(result)
         words = []
         for language in jsonData[0]["translations"]:

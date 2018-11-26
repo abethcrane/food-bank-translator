@@ -36,10 +36,10 @@
 
             Button:
                 text: "↺"
-                on_press: root.DownloadPrevThumb()
+                on_press: root.download_prev_thumb()
             Button:
                 text: "↻"
-                on_press: root.DownloadNewThumb()
+                on_press: root.download_new_thumb()
 
 <SpreadsheetRow>:
     gridLayout: gridLayout.__self__
@@ -47,13 +47,39 @@
 
     GridLayout: #Grid layout that holds the entire row of data
         id: gridLayout
-        size: root.size
+        size: root.size     
         pos: root.pos
-        cols: 1 + root.numOutputLangs + 1 # input, output, image
+        cols: 1 + root.numOutputLangs + 1 + 1 # input, output, image, delete
         row: 1 # The spreadsheet itself has: 1 + root.numWords + 1 # header, words, new line for extra words 
 
+<InputWordsPopup>:
+    auto_dismiss: False
+    size_hint: (0.6, 0.8)
+
+    GridLayout: 
+        size: root.size
+        pos: root.pos
+        cols: 1
+
+        TextInput: 
+            id: bulkInputWords
+            size: root.size
+            pos: root.pos
+
+        GridLayout:
+            size: root.size
+            pos: root.pos
+            rows: 1
+
+            Button:
+                text: 'Add words'
+                on_release: root.add_words(bulkInputWords.text)
+
+            Button:
+                text: 'Cancel'
+                on_release: root.dismiss()
 <Translator>:  
-    spreadsheetViewer: spreadsheetViewer.__self__
+    _spreadsheetViewer: spreadsheetViewer.__self__
     canvas:
         Rectangle:
             size: self.size
@@ -87,21 +113,25 @@
             rows: 1
 
             Button:
+                text: "Paste in input words"
+                on_press: root.paste_input_words()
+
+            Button:
                 text: "Import from spreadsheet"
-                on_press: root.ImportFromSpreadsheet()
+                on_press: root.import_from_spreadsheet()
 
             Button:
                 text: "Generate translations"
-                on_press: root.GenerateTranslations()
+                on_press: root.generate_translations()
 
             Button:
                 text: "Export to spreadsheet"
-                on_press: root.ExportToSpreadsheet()
+                on_press: root.export_to_spreadsheet()
 
             Button:
                 text: "Create output images"
-                on_press: root.OutputImages()
+                on_press: root.output_images()
 
             Button:
                 text: "Add new word"
-                on_press: root.CreateEmptySpreadsheetRow()
+                on_press: root.create_empty_spreadsheet_row()

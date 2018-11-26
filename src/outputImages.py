@@ -11,7 +11,7 @@ class SpreadsheetWrangler():
 
     @staticmethod    
     # Creates a dictionary of englishWord: [translatedWord, translatedWord, translatedWord]
-    def buildTranslationsDict (spreadsheetLocation):
+    def build_translations_dict (spreadsheetLocation):
         workbook = load_workbook(filename = spreadsheetLocation, read_only=True)
         worksheet = workbook["translations"]
 
@@ -37,7 +37,7 @@ class SpreadsheetWrangler():
         return dict
 
     @staticmethod
-    def getListsOfWordsPerLanguage(spreadsheetLocation):
+    def get_lists_of_words_per_language(spreadsheetLocation):
         workbook = load_workbook(filename = spreadsheetLocation, read_only=True)
         worksheet = workbook["translations"]
 
@@ -63,7 +63,7 @@ class FinalImageCreater():
         if spreadsheetLocation == "":
             spreadsheetLocation = "../translatedWords.xlsx"
         
-        self.translationsDict = SpreadsheetWrangler.buildTranslationsDict(spreadsheetLocation)
+        self.translationsDict = SpreadsheetWrangler.build_translations_dict(spreadsheetLocation)
         arialUnicodeFont = ImageFont.truetype('/Library/Fonts/Arial Unicode.ttf', 100)
 
         print("I'll print each word when I finish creating the output image for it")
@@ -111,6 +111,7 @@ class FinalImageCreater():
             outputImage.save("../images/" + englishWord + ".png")
             
             print(englishWord)
+        print("I'm finished creating output images")
             
 class WordWrapper():
 

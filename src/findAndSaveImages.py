@@ -29,33 +29,33 @@ class ImageDownloader():
             if englishWord is None or englishWord is "":
                 continue
 
-            (img, _) = self.getNextImage(englishWord, 0)
+            (img, _) = self.get_next_image(englishWord, 0)
             if img is None:
                 print("I couldn't find an image for " + englishWord)
                 continue
 
-            self.thumbifyAndSave(englishWord, img)
+            self.thumbify_and_save(englishWord, img)
 
             print(englishWord)
         
         print("I'm finished downloading thumbnails")
 
-    def getImagesForWords(self, words):
+    def get_images_for_words(self, words):
         print ("I'm getting the images for some words - I'll print each one's name as I go")
         for word in words:
             if word is None or word is "":
                 continue
 
-            (img, _) = self.getNextImage(word, 0)
+            (img, _) = self.get_next_image(word, 0)
             if img is None:
                 print("I couldn't find an image for " + word)
                 continue
 
-            self.thumbifyAndSave(word, img)
+            self.thumbify_and_save(word, img)
             print(word)
 
     @staticmethod
-    def thumbifyAndSave(word, img):
+    def thumbify_and_save(word, img):
         if img is None or word is "":
             print("Cannot save empty image or with empty file names")
             return
@@ -66,9 +66,9 @@ class ImageDownloader():
         
         # Save the thumbnail
         imageFilename = "../foodThumbnails/" + word + ".jpg"
-        img.save(imageFilename, "JPEG")
+        img.convert('RGB').save(imageFilename, "JPEG")
 
-    def getImageUrlForWord(self, word, retryTime):
+    def get_image_url_for_word(self, word, retryTime):
         #consider prefacing word with 'edible'
         headers = {"Ocp-Apim-Subscription-Key" : self.subscriptionKey}
         params  = {"q": word}
@@ -82,8 +82,8 @@ class ImageDownloader():
             print("Could not find results for " + word)
             return ""
 
-    def getNthImageForWord(self, word, n):
-        url = self.getImageUrlForWord(word, n)
+    def get_nth_image_for_word(self, word, n):
+        url = self.get_image_url_for_word(word, n)
         img = None
         try:
             # Download the image
@@ -95,27 +95,27 @@ class ImageDownloader():
 
         return img
 
-    def getNextImage(self, word, n):
+    def get_next_image(self, word, n):
         if (n < 0):
             n = 0
-        img = self.getNthImageForWord(word, n)
+        img = self.get_nth_image_for_word(word, n)
         retryTime = 0
         while img is None and retryTime < maxTries:
             retryTime += 1
             n += 1
-            img = self.getNthImageForWord(word, n)
+            img = self.get_nth_image_for_word(word, n)
 
         return img, n
 
-    def getPrevImage(self, word, n):
+    def get_prev_image(self, word, n):
         if (n < 0):
             n = resultsPerQuery - 1
-        img = self.getNthImageForWord(word, n)
+        img = self.get_nth_image_for_word(word, n)
         retryTime = 0
         while img is None and retryTime < maxTries:
             retryTime += 1
             n -= 1
-            img = self.getNthImageForWord(word, n)
+            img = self.get_nth_image_for_word(word, n)
 
         return img, n
 
