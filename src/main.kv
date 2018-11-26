@@ -59,21 +59,20 @@
 
 <InputWordsPopup>:
     auto_dismiss: False
-    size_hint: (0.6, 0.8)
+    size_hint: 0.5, 0.7
 
     GridLayout: 
+        id: gridLayout
         size: root.size
         pos: root.pos
         cols: 1
 
         TextInput: 
             id: bulkInputWords
+            size_hint: None, None
             size: root.size
-            pos: root.pos
 
         GridLayout:
-            size: root.size
-            pos: root.pos
             rows: 1
 
             Button:
