@@ -1,6 +1,4 @@
-﻿from pathlib import Path
-
-from kivy.app import App
+﻿from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.properties import AliasProperty, StringProperty, NumericProperty
@@ -14,9 +12,11 @@ from kivy.uix.slider import Slider
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
-from outputTranslations import WordTranslator
-from outputImages import FinalImageCreater, SpreadsheetWrangler
+from pathlib import Path
+
 from findAndSaveImages import ImageDownloader
+from outputImages import FinalImageCreater, SpreadsheetWrangler
+from outputTranslations import WordTranslator
 
 class Spreadsheet():
     def __init__(self):

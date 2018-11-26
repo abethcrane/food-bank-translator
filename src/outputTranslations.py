@@ -1,4 +1,4 @@
-import http.client, urllib.parse, uuid, json
+import http.client, json, urllib.parse, uuid
 from openpyxl import Workbook
 
 class WordTranslator():

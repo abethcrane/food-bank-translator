@@ -1,11 +1,20 @@
+import sys, textwrap
 from openpyxl import load_workbook
+from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
-import textwrap
+
+thismodule = sys.modules[__name__]
 
 # consts
-imageWidth = 1400
-padding = 50
-lineSpacingHeight = 100
+#Width and height are determined as half A4 paper at 300 dpi
+thismodule.imageWidth = 2480
+thismodule.imageHeight = 1754
+thismodule.horizontal_padding = 50
+thismodule.line_spacing_height = 100
+thismodule.maxfontsize = 400
+thismodule.idealfontsize = thismodule.maxfontsize
+thismodule.fontlocation = "/Library/Fonts/Arial Unicode.ttf"
+thismodule.thumbnailsize = (512, 512)
 
 class SpreadsheetWrangler():
 
@@ -53,7 +62,6 @@ class SpreadsheetWrangler():
 
         return result
 
-
 class FinalImageCreater():
 
     translationsDict = {}
@@ -64,146 +72,147 @@ class FinalImageCreater():
             spreadsheetLocation = "../translatedWords.xlsx"
         
         self.translationsDict = SpreadsheetWrangler.build_translations_dict(spreadsheetLocation)
-        arialUnicodeFont = ImageFont.truetype('/Library/Fonts/Arial Unicode.ttf', 100)
 
         print("I'll print each word when I finish creating the output image for it")
 
-        for englishWord, translatedWords in self.translationsDict.items():
-            if englishWord is None:
+        for inputWord, translatedWords in self.translationsDict.items():
+            if inputWord is None:
                 continue
 
-            print("Currently making an image for " + englishWord)
-            # Open the thumbnail for this word and get the dimensions
-            foodThumbnailImage = Image.open("../foodThumbnails/" + englishWord + ".jpg", "r")
-            # TODO check if image exists!
+            # Arrange the words into a nice list
+            wordsToPrint = translatedWords
+            wordsToPrint.insert(0, inputWord)
 
-            thumbnailWidth, thumbnailHeight = foodThumbnailImage.size
-            
-            leftSideOfImage = imageWidth - thumbnailWidth - (padding * 2)
-            
-            # Now figure out the text height so we can calculate our image height
-            translationsToPrint = []
-            translationsToPrint.append(WordWrapper.getWrappedLines(englishWord, leftSideOfImage, arialUnicodeFont))
-            
-            # Print all the words onto the slide
-            for translatedWord in translatedWords:
-                translationsToPrint.append(WordWrapper.getWrappedLines(translatedWord, leftSideOfImage, arialUnicodeFont))
-
-            totalHeight = WordWrapper.calculateTotalTextHeight(translationsToPrint, arialUnicodeFont) + (lineSpacingHeight * (len(translationsToPrint) - 1)) # + spacing
-            
             # Draw out the white background + the word we translated
-            outputImage = Image.new('RGB', (imageWidth, totalHeight + (padding * 2)), color = 'white')
-            imageDrawer = ImageDraw.Draw(outputImage)
-            height = padding
-            
-            for translation in translationsToPrint:
-                for line in translation:
-                    w, h = arialUnicodeFont.getsize(line)
-                    imageDrawer.text((padding, height), line, font=arialUnicodeFont, fill=(0, 0, 0))
-                    height += h
-                height += lineSpacingHeight
-            
-            # Paste in the thumbnail image
-            offset = imageWidth - thumbnailWidth - padding, int((totalHeight/2) - (thumbnailHeight/2)) # on the right, vertically centered
-            outputImage.paste(foodThumbnailImage, offset)
-            
+            outputImage = Image.new('RGB', (thismodule.imageWidth, thismodule.imageHeight), color = 'white')
+            imageDrawer = ImageDraw.Draw(outputImage)            
+
+            # Try to find the thumbnail for this word
+            filepath = "../foodThumbnails/" + inputWord + ".jpg"
+            if not Path(filepath).is_file():
+                filepath = "../foodThumbnails/" + inputWord + ".png"
+                if not Path(filepath).is_file():
+                    print ("Could not find an appropriate thumbnail for " + inputWord)
+                    filepath = None
+
+            # Handle printing the thumbnail if there is one
+            if filepath is None:
+                foodThumbnailImage = None
+                thumbnailWidth, thumbnailHeight = 0,0 
+                left_side_of_thumbnail = thismodule.imageWidth
+            else: 
+                foodThumbnailImage = Image.open(filepath)
+                # Ensure the thumbnail is actually thumbnail size
+                foodThumbnailImage.thumbnail(thismodule.thumbnailsize, Image.ANTIALIAS)
+                # Get the dimensions for the thumbnail
+                thumbnailWidth, thumbnailHeight = foodThumbnailImage.size
+                left_side_of_thumbnail = thismodule.imageWidth - thumbnailWidth - (thismodule.horizontal_padding * 2)
+                # Paste the thumbnail into the image
+                thumbnail_offset = left_side_of_thumbnail, int((thismodule.imageHeight/2) - (thumbnailHeight/2)) # on the right, vertically centered
+                outputImage.paste(foodThumbnailImage, thumbnail_offset)
+
+            # The text has a horizontal padding at its left, so can't take up all the space before the thumbnail
+            textwidth = left_side_of_thumbnail - thismodule.horizontal_padding 
+
+            # Calculate the starting point of the text, so that it'll be vertically centered
+            thismodule.idealfontsize = FontManipulator.find_font_size_to_fit_height(wordsToPrint, thismodule.imageHeight, thismodule.fontlocation, thismodule.maxfontsize)
+            totalHeight = FontManipulator.calculate_total_text_height(wordsToPrint, textwidth, thismodule.fontlocation)
+            word_y_pos = int((thismodule.imageHeight - totalHeight) / 2) # e.g. (1754 - 1500)/2 = start at 177
+
+            # Print each word onto the image
+            for word in wordsToPrint:
+                fontsize = FontManipulator.find_font_size_to_fit_width(word, textwidth, thismodule.fontlocation, thismodule.idealfontsize)
+                font = ImageFont.truetype(thismodule.fontlocation, fontsize)
+                _, h = FontManipulator.get_font_with_offset(font, word)
+                imageDrawer.text((thismodule.horizontal_padding, word_y_pos), word, font=font, fill=(0, 0, 0))
+                word_y_pos += h + thismodule.line_spacing_height
+
             # Save off the image
-            outputImage.save("../images/" + englishWord + ".png")
+            outputImage.save("../images/" + inputWord + ".png")
             
-            print(englishWord)
+            print(inputWord)
         print("I'm finished creating output images")
             
-class WordWrapper():
+class FontManipulator():
+    @staticmethod
+    def get_font_with_offset(font, text):
+        return map(sum, zip(font.getsize(text), font.getoffset(text)))
 
     @staticmethod
-    # Splts a line + word into whatever fits within width + a "-", and the remnants that didn't fit
-    def splitWordToWidth(line, word, width, font):
-        w, h =  font.getsize(line)
-        
-        while w > width:
-            line, leftover = WordWrapper.splitContentToWidth(line, width, font)
-            w, h =  font.getsize(leftover)
+    def find_font_size_to_fit_height(lines, height, font_location, max_size):
+        # If we have to fit 5 lines in 2000 pixels then we have to fit 1 line in 400, so let's just calculate the max size to do that
+        height /= len(lines)
 
-        dashWidth, h = font.getsize("-")
-        width -= dashWidth
+        minfontsize = max_size
+        for line in lines:
+            linesize = FontManipulator.find_font_size_to_fit(line, height - thismodule.line_spacing_height, font_location, max_size, False)
+            if linesize < minfontsize:
+                minfontsize = linesize
 
-        line = line + " "
-        returnWord = ""
-        for char in word:
-            w, h = font.getsize(line + char)
-            if w > width:
-                returnWord += char
-            else:
-                line = line + char
+        return minfontsize
 
-        line += "-"
-        return line, returnWord
-        
     @staticmethod
-    # Splits a str up into a line that fits in width, and whatever didn't fit
-    def splitContentToWidth(str, width, font):
-        dashWidth, h = font.getsize("-")
-        width -= dashWidth
+    def find_font_size_to_fit_width(text, width, font_location, max_size):
+        return FontManipulator.find_font_size_to_fit(text, width, font_location, max_size, True)
 
-        line = ""
-        leftover = ""
-        for char in str:
-            w, h = font.getsize(line + char)
-            if w > width:
-                leftover += char
+    @staticmethod
+    def find_font_size_to_fit(text, fit_value, font_location, max_size, is_width):
+        # Maybe it's already perfect
+        font = ImageFont.truetype(font_location, max_size)
+        w, h = FontManipulator.get_font_with_offset(font, text)
+        if (is_width):
+            result = w
+        else:
+            result = h
+
+        if (result < fit_value):
+            return max_size
+
+        # If not, we do a binary search
+        size = max_size
+        found_font = False
+        upper_bound = max_size
+        lower_bound = 0
+        upper_bound_result = result
+
+        while True:
+            font = ImageFont.truetype(font_location, size)
+            w, h = FontManipulator.get_font_with_offset(font, text)
+            if (is_width):
+                result = w
             else:
-                line = line + char
-
-        line += "-"
-        return line, leftover
-         
-    @staticmethod  
-    # Gets the wrapped lines for a str to fit into width
-    def getWrappedLines(str, width, font):
-        words = str.split(' ')
-        total = 0
-        line = ""
-        lines = []
-        
-        # For each word, see if it can be added onto the line and still fit in the width
-        for word in words:
-            totalW, totalH = font.getsize(line)
-            newW, newH = font.getsize(" " + word)
-            
-            if totalW + newW > width:
-                # If it can't fit, split the word at whatever character is the last to fit
-                line, leftover = WordWrapper.splitWordToWidth(line, word, width, font)
-                lines.append(line)
-                line = leftover
-                
-                # In case our leftover content was too big to fit on a line
-                # We need to loop through until we have a leftover amount that can fit on a line
-                lineW, lineH = font.getsize(line)
-                while lineW > width:
-                    line, leftover = WordWrapper.splitWordToWidth("", line, width, font)
-                    lines.append(line)
-                    line = leftover
-                    lineW, lineH = font.getsize(line)
+                result = h
+            # If we find the perfect match, return it
+            if result == fit_value:
+                return size
+            # If we blew over the top (say it was 74, and we tried a font size 49 and got 73, and font size 50 and got 75, we'd return the 73)
+            elif result > upper_bound_result:
+                return lower_bound
+            # Business as usual - we have width 74, we got width 50, let's try a bigger font
+            elif result > fit_value:
+                upper_bound = size
+                upper_bound_result = result
+            # Business as usual - we have width 74, we got width 100, so let's try a smaller font
             else:
-                # If it fits, add it the line with a space in front of it :)
-                line = line + " " + word
-        
-        # Add back in the last line :)
-        lines.append(line)
-
-        return lines
+                lower_bound = size
+                lower_bound_result = result
+            prevsize = size
+            size = lower_bound + ((upper_bound - lower_bound) / 2)
+            size = int(size)
+            # Don't want to get caught inf looping
+            if size == prevsize:
+                return lower_bound
 
     @staticmethod    
-    # Calculates the total text height for a list of lists
-    # e.g. [[line1, line2], [line1, line2, line3], [line1]]
-    def calculateTotalTextHeight(listOfLists, font):
+    # Calculates the total text height for a list of words
+    def calculate_total_text_height(list, width, font_location):
         totalH = 0
-        for list in listOfLists:
-            for line in list:
-                w, h = font.getsize(line)
-                totalH += h
-        return totalH
-        
+        for line in list:
+            fontsize = FontManipulator.find_font_size_to_fit_width(line, width, font_location, thismodule.idealfontsize)
+            font = ImageFont.truetype(font_location, fontsize)
+            w, h = FontManipulator.get_font_with_offset(font, line)
+            totalH += h + thismodule.line_spacing_height
+        return totalH - thismodule.line_spacing_height # we don't need line spacing after the final word
         
 if __name__ == '__main__':
     FinalImageCreater().main("")

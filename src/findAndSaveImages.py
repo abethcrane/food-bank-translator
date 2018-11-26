@@ -1,12 +1,15 @@
-﻿import  urllib.parse, uuid, json, requests
+﻿import json, requests, sys, urllib.parse, uuid
 from openpyxl import Workbook, load_workbook
 from openpyxl.drawing.image import Image
 from PIL import Image
 from io import BytesIO
 
-search_url = "https://api.cognitive.microsoft.com/bing/v7.0/images/search"
-maxTries = 5
-resultsPerQuery = 35
+thismodule = sys.modules[__name__]
+
+thismodule.search_url = "https://api.cognitive.microsoft.com/bing/v7.0/images/search"
+thismodule.maxTries = 5
+thismodule.resultsPerQuery = 35
+thismodule.thumbnailsize = (512, 512)
 
 class ImageDownloader():
 
@@ -61,8 +64,7 @@ class ImageDownloader():
             return
 
         # Convert the image into a thumbnail
-        size = 256, 256
-        img.thumbnail(size, Image.ANTIALIAS)
+        img.thumbnail(thismodule.thumbnailsize, Image.ANTIALIAS)
         
         # Save the thumbnail
         imageFilename = "../foodThumbnails/" + word + ".jpg"
@@ -74,7 +76,7 @@ class ImageDownloader():
         params  = {"q": word}
 
         try:
-            response = requests.get(search_url, headers=headers, params=params)
+            response = requests.get(thismodule.search_url, headers=headers, params=params)
             response.raise_for_status()
             search_results = response.json()
             return search_results["value"][retryTime]["contentUrl"]
@@ -100,7 +102,7 @@ class ImageDownloader():
             n = 0
         img = self.get_nth_image_for_word(word, n)
         retryTime = 0
-        while img is None and retryTime < maxTries:
+        while img is None and retryTime < thismodule.maxTries:
             retryTime += 1
             n += 1
             img = self.get_nth_image_for_word(word, n)
@@ -109,10 +111,10 @@ class ImageDownloader():
 
     def get_prev_image(self, word, n):
         if (n < 0):
-            n = resultsPerQuery - 1
+            n = thismodule.resultsPerQuery - 1
         img = self.get_nth_image_for_word(word, n)
         retryTime = 0
-        while img is None and retryTime < maxTries:
+        while img is None and retryTime < thismodule.maxTries:
             retryTime += 1
             n -= 1
             img = self.get_nth_image_for_word(word, n)

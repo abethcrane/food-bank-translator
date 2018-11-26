@@ -1,17 +1,17 @@
-import http.client, urllib.parse, json
+import http.client, json, sys, urllib.parse
 
-subscriptionKey =  open("subscriptionKey.txt").read()
+thismodule = sys.modules[__name__]
 
-host = 'api.cognitive.microsofttranslator.com'
-path = '/languages?api-version=3.0'
-
-output_path = 'languageCodes.txt'
+thismodule.subscriptionKey =  open("subscriptionKey.txt").read()
+thismodule.host = 'api.cognitive.microsofttranslator.com'
+thismodule.path = '/languages?api-version=3.0'
+thismodule.output_path = 'languageCodes.txt'
 
 def get_available_languages():
-    headers = {'Ocp-Apim-Subscription-Key': subscriptionKey}
+    headers = {'Ocp-Apim-Subscription-Key': thismodule.subscriptionKey}
 
-    conn = http.client.HTTPSConnection(host)
-    conn.request ("GET", path, None, headers)
+    conn = http.client.HTTPSConnection(thismodule.host)
+    conn.request ("GET", thismodule.path, None, headers)
     response = conn.getresponse()
     return response.read()
     
@@ -27,6 +27,6 @@ def cleanup_results(results):
 result = get_available_languages()
 niceResults = cleanup_results(result)
 
-f = open(output_path, 'w')
+f = open(thismodule.output_path, 'w')
 f.write(niceResults)  
 f.close
