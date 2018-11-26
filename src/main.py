@@ -60,6 +60,8 @@ class SpreadsheetRow(Widget):
         # Add the english word column
         inputWordWidget = TextInput(text=self.inputWord, multiline=False)
         inputWordWidget.bind(text=self.on_input_word_edit)
+        inputWordWidget.size_hint = (None, None)
+        inputWordWidget.size = self.size
         self.gridLayout.add_widget(inputWordWidget)
 
         # Add on a text input for each output language
@@ -72,18 +74,20 @@ class SpreadsheetRow(Widget):
 
         # Create input cells for each output language
         for i in range (0, self.numOutputLangs):
-            textInput = TextInput(text=self.outputWordsList[i], multiline=False)
-            textInput.bind(text=self.on_translated_word_edit)
-            self.gridLayout.add_widget(textInput)
-            self.instanceToValue[textInput] = self.outputWordsList[i]
+            outputLangWidget = TextInput(text=self.outputWordsList[i], multiline=False)
+            outputLangWidget.bind(text=self.on_translated_word_edit)
+            outputLangWidget.size_hint = (None, None)
+            outputLangWidget.size = self.size
+            self.gridLayout.add_widget(outputLangWidget)
+            self.instanceToValue[outputLangWidget] = self.outputWordsList[i]
 
         # Add in the thumbnail cell
-        newThumb = Thumbnail() #size_hint=(None, None), width=700, height=400
-
+        newThumb = Thumbnail()
         newThumb.name = self.inputWord
         newThumb.filepath = self.imgFilepath
         self.gridLayout.add_widget(newThumb)
 
+        # Add in the delete button
         deleteButton = Button()
         deleteButton.text = "⌫"
         deleteButton.background_color = (0.75, 0, 0, 1)

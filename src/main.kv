@@ -14,13 +14,14 @@
     valign: "middle"
     halign: "center"
 
-
 <Thumbnail>:
     image: image.__self__
+    size_hint: None, None
+    size: 800, 400
 
     GridLayout: #Displays the image above the 2 buttons
         size_hint: None, None
-        size: root.size
+        size: root.size[0], 400
         pos: root.pos
         rows: 2
 
@@ -44,10 +45,12 @@
 <SpreadsheetRow>:
     gridLayout: gridLayout.__self__
     size_hint_y: None
+    size: root.size[0], 400
 
     GridLayout: #Grid layout that holds the entire row of data
         id: gridLayout
-        size: root.size     
+        size_hint_y: None
+        size: root.size[0], 400
         pos: root.pos
         cols: 1 + root.numOutputLangs + 1 + 1 # input, output, image, delete
         row: 1 # The spreadsheet itself has: 1 + root.numWords + 1 # header, words, new line for extra words 
