@@ -170,7 +170,6 @@ class FontManipulator():
 
         # If not, we do a binary search
         size = max_size
-        found_font = False
         upper_bound = max_size
         lower_bound = 0
         upper_bound_result = result
@@ -195,7 +194,6 @@ class FontManipulator():
             # Business as usual - we have width 74, we got width 100, so let's try a smaller font
             else:
                 lower_bound = size
-                lower_bound_result = result
             prevsize = size
             size = lower_bound + ((upper_bound - lower_bound) / 2)
             size = int(size)
@@ -210,7 +208,7 @@ class FontManipulator():
         for line in list:
             fontsize = FontManipulator.find_font_size_to_fit_width(line, width, font_location, thismodule.idealfontsize)
             font = ImageFont.truetype(font_location, fontsize)
-            w, h = FontManipulator.get_font_with_offset(font, line)
+            _, h = FontManipulator.get_font_with_offset(font, line)
             totalH += h + thismodule.line_spacing_height
         return totalH - thismodule.line_spacing_height # we don't need line spacing after the final word
         

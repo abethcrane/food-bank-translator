@@ -1,7 +1,7 @@
 ﻿from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.properties import AliasProperty, StringProperty, NumericProperty
+from kivy.properties import StringProperty, NumericProperty
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
@@ -60,8 +60,6 @@ class SpreadsheetRow(Widget):
         # Add the english word column
         inputWordWidget = TextInput(text=self.inputWord, multiline=False)
         inputWordWidget.bind(text=self.on_input_word_edit)
-        inputWordWidget.size_hint = (None, None)
-        inputWordWidget.size = self.size
         self.gridLayout.add_widget(inputWordWidget)
 
         # Add on a text input for each output language
@@ -76,8 +74,6 @@ class SpreadsheetRow(Widget):
         for i in range (0, self.numOutputLangs):
             outputLangWidget = TextInput(text=self.outputWordsList[i], multiline=False)
             outputLangWidget.bind(text=self.on_translated_word_edit)
-            outputLangWidget.size_hint = (None, None)
-            outputLangWidget.size = self.size
             self.gridLayout.add_widget(outputLangWidget)
             self.instanceToValue[outputLangWidget] = self.outputWordsList[i]
 
