@@ -32,15 +32,14 @@ class Spreadsheet():
         translationsDict = {}
         for row in self.rows:
             translatedWords = []
-            for instance, word in row.instanceToValue.items():
+            for _, word in row.instanceToValue.items():
                 translatedWords.append(word)
             translationsDict[row.inputWord] = translatedWords
 
         return translationsDict
 
 class SpreadsheetRow(Widget):
-
-    numOutputLangs = NumericProperty(3)
+    _numOutputLangs = NumericProperty(3)
 
     def __init__(self, **kwargs):
         self.gridLayout = None
@@ -88,7 +87,7 @@ class SpreadsheetRow(Widget):
         deleteButton.text = "⌫"
         deleteButton.background_color = (0.75, 0, 0, 1)
         deleteButton.bind(on_press=self.delete_this_row)
-        deleteButton.size_hint = (None, None)
+        deleteButton.size_hint = (None, 1)
         deleteButton.size = self.size
         self.gridLayout.add_widget(deleteButton)
 
@@ -102,7 +101,7 @@ class SpreadsheetRow(Widget):
         self.instanceToValue[instance] = value
 
 class Thumbnail(Widget):
-    image = None
+    _image = None
     name = StringProperty("")
     filepath = StringProperty("")
 
@@ -112,7 +111,7 @@ class Thumbnail(Widget):
         Clock.schedule_interval(self.reload_img, 10)
 
     def reload_img(self, dt):
-        self.image.reload()
+        self._image.reload()
 
     def download_new_thumb(self):
         (img, self.tryTime) = ImageDownloader().get_next_image(self.name, self.tryTime + 1)
