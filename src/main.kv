@@ -57,6 +57,38 @@
         pos: root.pos
         rows: 1
 
+<SpreadsheetLocationPopup>:
+    auto_dismiss: False
+    size_hint: 0.5, 0.7
+
+    GridLayout: 
+        id: gridLayout
+        size: root.size[0], self.minimum_height
+        pos: root.pos
+        cols: 1
+
+        FileChooserIconView:
+            id: filechooser
+            size_hint: None, 1
+            size: root.size[0], root.size[1] - popupbuttons.minimum_height
+            path: root._spreadsheetFolder
+            filters: ["*.xls*"]
+
+        GridLayout:
+            id: popupbuttons
+            rows: 1
+            size_hint: None, None
+            size: root.size[0] * 0.97, self.minimum_height # For some reason they overflow a little
+            pos: root.pos
+
+            Button:
+                text: 'Select spreadsheet'
+                on_release: root.load_spreadsheet(filechooser.path, filechooser.selection)
+
+            Button:
+                text: 'Cancel'
+                on_release: root.dismiss()
+
 <InputWordsPopup>:
     auto_dismiss: False
     size_hint: 0.5, 0.7

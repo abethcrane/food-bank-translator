@@ -1,4 +1,6 @@
-﻿from kivy.app import App
+﻿import os
+
+from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.properties import StringProperty, NumericProperty
@@ -102,10 +104,10 @@ class SpreadsheetRow(Widget):
 
 class Thumbnail(Widget):
     _image = None
-    name = StringProperty("")
     filepath = StringProperty("")
 
     def __init__(self, **kwargs):
+        self.name = StringProperty("")
         super().__init__(**kwargs)
         self.tryTime = 0
         Clock.schedule_interval(self.reload_img, 10)
@@ -129,6 +131,14 @@ class InputWordsPopup(Popup):
         for inputWord in inputWords:
             Translator._instance.create_spreadsheet_row(inputWord, ["", "", ""], "")
             self.dismiss()
+
+class SpreadsheetLocationPopup(Popup):
+    _spreadsheetFolder = StringProperty(".")
+
+    def load_spreadsheet(self, filepath, filename):
+        self._spreadsheetFolder = filepath
+        Translator._instance.create_spreadsheet_rows_from_dict(SpreadsheetWrangler.build_translations_dict(os.path.join(filepath, filename[0])))
+        self.dismiss()
 
 class Translator(Widget):
     _instance = None
@@ -162,8 +172,9 @@ class Translator(Widget):
         WordTranslator().write_dict_to_spreadsheet(self._spreadsheet.build_dict())
 
     # reads contents of spraedsheet and updates contents on screen
-    def import_from_spreadsheet(self):    
-        self.create_spreadsheet_rows_from_dict(SpreadsheetWrangler.build_translations_dict("../translatedWords.xlsx"))
+    def import_from_spreadsheet(self):
+        popup = SpreadsheetLocationPopup(title='Select spreadsheet location')
+        popup.open()
 
     def create_empty_spreadsheet_row(self):
         #TODO: hardcode the correct number of output words, not just arbitrarily 3
