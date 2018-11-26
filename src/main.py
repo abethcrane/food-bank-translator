@@ -85,8 +85,11 @@ class SpreadsheetRow(Widget):
         self.gridLayout.add_widget(newThumb)
 
         deleteButton = Button()
-        deleteButton.text = "X"
+        deleteButton.text = "⌫"
+        deleteButton.background_color = (0.75, 0, 0, 1)
         deleteButton.bind(on_press=self.delete_this_row)
+        deleteButton.size_hint = (None, None)
+        deleteButton.size = self.size
         self.gridLayout.add_widget(deleteButton)
 
     def delete_this_row(self, instance):
