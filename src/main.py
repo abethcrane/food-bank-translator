@@ -156,7 +156,7 @@ class SelectImportSpreadsheetPopup(FilePickerPopup):
         super().__init__(**kwargs)
 
     def on_selected(self, filepath, filename):
-        Preferences.importspreadsheetpath = filepath
+        Preferences.importSpreadsheetPath = filepath
         super().on_selected(filepath,filename)
 
 class SelectExportFolderPopup(FilePickerPopup):
@@ -167,17 +167,17 @@ class SelectExportFolderPopup(FilePickerPopup):
         self._selectButton.text = "Use this folder"
 
     def on_selected(self, filepath, filename):
-        Preferences.exportspreadsheetpath = filepath
+        Preferences.exportSpreadsheetPath = filepath
         super().on_selected(filepath,filename)
 
     def is_dir(self, directory, filename):
         return isdir(join(directory, filename))
 
 class Preferences():
-    numoutputlangs = 3
-    importspreadsheetpath = "."
-    exportspreadsheetpath = "../"
-    outputlangcodes = ["zh-Hans", "es", "vi"]
+    numOutputLangs = 3
+    importSpreadsheetPath = "."
+    exportSpreadsheetPath = "../"
+    outputLangCodes = ["zh-Hans", "es", "vi"]
 
 class Translator(Widget):
     _instance = None
@@ -195,29 +195,67 @@ class Translator(Widget):
             self.import_from_spreadsheet()
             self.create_empty_spreadsheet_row()
 
+    # allow the user to bulk input food items to be translated
     def paste_input_words(self):
         popup = InputWordsPopup(title='One food item per line')
         popup.open()
 
+    # overwrite all data with new images and translations
     def generate_translations(self):
         inputWords = self._spreadsheet.getInputWords()
         self.reset_spreadsheet()
-        translationsDict = WordTranslator().generate_translations_dict(inputWords)
+        translationsDict = WordTranslator().generate_translations_dict(inputWords, Preferences.outputLangCodes)
         ImageDownloader().get_images_for_words(list(translationsDict.keys()))
         self.create_spreadsheet_rows_from_dict(translationsDict)
 
+    # only fill in rows with missing translations, and generate missing images
+    def generate_missing_translations(self):
+        # Cache them off so we can delete them as we go
+        spreadsheetRows = self._spreadsheet.rows
+        for row in spreadsheetRows:
+            # If the row has any empty words, retranslate it
+            retranslate = False
+            for word in row.outputWordsList:
+                if word is "":
+                    retranslate = True
+            # If the row is missing an image filepath, we also need to retranslate it
+            if row.imgFilepath is "":
+                retranslate = True
+
+            if retranslate:
+                inputWord = row.inputWord
+                outputWordsList = WordTranslator().get_translated_words(row.inputWord, Preferences.outputLangCodes)
+
+                # See if an image exists but we just haven't loaded it
+                imgFilepath = self.try_get_filepath_for_thumbnail(row.inputWord)
+                # If it really doesn't exist, download a new one and then try to find it
+                if imgFilepath is "":
+                    ImageDownloader().get_images_for_words([row.inputWord])
+                    imgFilepath = self.try_get_filepath_for_thumbnail(row.inputWord)
+
+                # Remove the row (easier than trying to edit it =/)
+                self.remove_spreadsheet_row(row)
+                self.create_spreadsheet_row(inputWord, outputWordsList, imgFilepath)
+
     # asks the user where to export to
     def export_to_spreadsheet(self):
-        popup = SelectExportFolderPopup(title='Select output folder', path=Preferences.exportspreadsheetpath, onselect=self.export_to_spreadsheet2)
+        popup = SelectExportFolderPopup(
+            title='Select output folder',
+            path=Preferences.exportSpreadsheetPath,
+            onselect=self.export_to_spreadsheet2)
         popup.open()
 
     # takes contents on screen and creates a spreadsheet
     def export_to_spreadsheet2(self, folder):
-        WordTranslator().write_dict_to_spreadsheet(self._spreadsheet.build_dict(), join(folder, "outputTranslations.xlsx"))
+        outputFile = join(folder, "outputTranslations.xlsx")
+        WordTranslator().write_dict_to_spreadsheet(self._spreadsheet.build_dict(), outputFile)
 
     # reads contents of spraedsheet and updates contents on screen
     def import_from_spreadsheet(self):
-        popup = SelectImportSpreadsheetPopup(title='Select import spreadsheet', path=Preferences.importspreadsheetpath, onselect=self.load_spreadsheet_from_file)
+        popup = SelectImportSpreadsheetPopup(
+            title='Select import spreadsheet',
+            path=Preferences.importSpreadsheetPath,
+            onselect=self.load_spreadsheet_from_file)
         popup.open()
 
     # loads in a spreadsheet
@@ -227,7 +265,7 @@ class Translator(Widget):
     # creates a new blank spreadsheet row
     def create_empty_spreadsheet_row(self):
         outputwords = []
-        for i in range (0, Preferences.numoutputlangs):
+        for _ in range (0, Preferences.numOutputLangs):
             outputwords.append("")
         self.create_spreadsheet_row("", outputwords, "")
 
@@ -249,17 +287,22 @@ class Translator(Widget):
     def create_spreadsheet_rows_from_dict(self, translationsDict):
         self.reset_spreadsheet()
         for inputWord, outputWords in translationsDict.items():
-            # Try to come up with an appropriate image path
-            filepath = "../foodThumbnails/" + inputWord + ".jpg"
-            if not Path(filepath).is_file():
-                filepath = "../foodThumbnails/" + inputWord + ".png"
-                if not Path(filepath).is_file():
-                    print ("Could not find an appropriate thumbnail for " + inputWord)
-                    filepath = ""
+            filepath = self.try_get_filepath_for_thumbnail(inputWord)
 
             # Add the row to the spreadsheet viewer
             newRow = SpreadsheetRow(parentSheet=self._spreadsheet, inputWord=inputWord, outputWords=outputWords, imgFilepath=filepath)
             self._spreadsheetViewer.add_widget(newRow)
+
+    def try_get_filepath_for_thumbnail(self, word):
+        # Try to come up with an appropriate image path
+        filepath = "../foodThumbnails/" + word + ".jpg"
+        if not Path(filepath).is_file():
+            filepath = "../foodThumbnails/" + word + ".png"
+            if not Path(filepath).is_file():
+                print ("Could not find an appropriate thumbnail for " + word)
+                filepath = ""
+
+        return filepath
 
     # clears the spreadsheet out
     def reset_spreadsheet(self):

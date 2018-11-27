@@ -204,7 +204,11 @@
                 on_press: root.import_from_spreadsheet()
 
             Button:
-                text: "Generate translations"
+                text: "Generate missing translations"
+                on_press: root.generate_missing_translations()
+
+            Button:
+                text: "Redo all translations"
                 on_press: root.generate_translations()
 
             Button:
