@@ -6,19 +6,16 @@ from io import BytesIO
 
 thismodule = sys.modules[__name__]
 
-thismodule.search_url = "https://api.cognitive.microsoft.com/bing/v7.0/images/search"
+thismodule.searchUrl = "https://api.cognitive.microsoft.com/bing/v7.0/images/search"
 thismodule.maxTries = 5
 thismodule.resultsPerQuery = 35
-thismodule.thumbnailsize = (512, 512)
+thismodule.thumbnailSize = (512, 512)
 
 class ImageDownloader():
 
     subscriptionKey = open("../subscriptionKeys/imageSubscriptionKey.txt").read()
 
-    def main(self, spreadsheetLocation):   
-        if spreadsheetLocation == "":
-            spreadsheetLocation = "../translatedWords.xlsx"
-
+    def main(self, spreadsheetLocation):
         print("I'll print each word when I finish downloading a thumbnail for it")
 
         # Initialize the spreadsheet
@@ -64,7 +61,7 @@ class ImageDownloader():
             return
 
         # Convert the image into a thumbnail
-        img.thumbnail(thismodule.thumbnailsize, Image.ANTIALIAS)
+        img.thumbnail(thismodule.thumbnailSize, Image.ANTIALIAS)
         
         # Save the thumbnail
         imageFilename = "../foodThumbnails/" + word + ".jpg"
@@ -76,7 +73,7 @@ class ImageDownloader():
         params  = {"q": word}
 
         try:
-            response = requests.get(thismodule.search_url, headers=headers, params=params)
+            response = requests.get(thismodule.searchUrl, headers=headers, params=params)
             response.raise_for_status()
             search_results = response.json()
             return search_results["value"][retryTime]["contentUrl"]
@@ -123,4 +120,4 @@ class ImageDownloader():
 
 
 if __name__ == '__main__':
-    ImageDownloader().main("")
+    ImageDownloader().main("../translatedWords.xlsx")

@@ -5,7 +5,7 @@ thismodule = sys.modules[__name__]
 thismodule.subscriptionKey =  open("subscriptionKey.txt").read()
 thismodule.host = 'api.cognitive.microsofttranslator.com'
 thismodule.path = '/languages?api-version=3.0'
-thismodule.output_path = 'languageCodes.txt'
+thismodule.outputPath = 'languageCodes.txt'
 
 def get_available_languages():
     headers = {'Ocp-Apim-Subscription-Key': thismodule.subscriptionKey}
@@ -27,6 +27,6 @@ def cleanup_results(results):
 result = get_available_languages()
 niceResults = cleanup_results(result)
 
-f = open(thismodule.output_path, 'w')
+f = open(thismodule.outputPath, 'w')
 f.write(niceResults)  
 f.close

@@ -1,6 +1,4 @@
-﻿import os
-
-from kivy.app import App
+﻿from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.properties import StringProperty, NumericProperty
@@ -14,11 +12,15 @@ from kivy.uix.slider import Slider
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
+from os.path import join, isdir
 from pathlib import Path
 
 from findAndSaveImages import ImageDownloader
 from outputImages import FinalImageCreater, SpreadsheetWrangler
 from outputTranslations import WordTranslator
+
+class SpreadsheetTitleRow(Widget):
+    pass
 
 class Spreadsheet():
     def __init__(self):
@@ -132,18 +134,55 @@ class InputWordsPopup(Popup):
             Translator._instance.create_spreadsheet_row(inputWord, ["", "", ""], "")
             self.dismiss()
 
-class SpreadsheetLocationPopup(Popup):
-    _spreadsheetFolder = StringProperty(".")
+class FilePickerPopup(Popup):
+    _path = StringProperty(".")
+    _filechooser = None
+    _selectButton = None
 
-    def load_spreadsheet(self, filepath, filename):
-        self._spreadsheetFolder = filepath
-        Translator._instance.create_spreadsheet_rows_from_dict(SpreadsheetWrangler.build_translations_dict(os.path.join(filepath, filename[0])))
+    def __init__(self, **kwargs):
+        self._path = kwargs.pop("path")
+        self.onselect = kwargs.pop("onselect")
+        super().__init__(**kwargs)
+
+    def on_selected(self, filepath, filename):
+        path = filepath
+        if len(filename) > 0:
+            path = join(filepath, filename[0])
+        self.onselect(path)
         self.dismiss()
+
+class SelectImportSpreadsheetPopup(FilePickerPopup):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def on_selected(self, filepath, filename):
+        Preferences.importspreadsheetpath = filepath
+        super().on_selected(filepath,filename)
+
+class SelectExportFolderPopup(FilePickerPopup):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._filechooser.dirselect = True
+        self._filechooser.filters = [self.is_dir]
+        self._selectButton.text = "Use this folder"
+
+    def on_selected(self, filepath, filename):
+        Preferences.exportspreadsheetpath = filepath
+        super().on_selected(filepath,filename)
+
+    def is_dir(self, directory, filename):
+        return isdir(join(directory, filename))
+
+class Preferences():
+    numoutputlangs = 3
+    importspreadsheetpath = "."
+    exportspreadsheetpath = "../"
+    outputlangcodes = ["zh-Hans", "es", "vi"]
 
 class Translator(Widget):
     _instance = None
     _spreadsheet = Spreadsheet()
-    _spreadsheetViewer = None 
+    _spreadsheetViewer = None
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -167,30 +206,46 @@ class Translator(Widget):
         ImageDownloader().get_images_for_words(list(translationsDict.keys()))
         self.create_spreadsheet_rows_from_dict(translationsDict)
 
-    # takes contents on screen and creates a spreadsheet
+    # asks the user where to export to
     def export_to_spreadsheet(self):
-        WordTranslator().write_dict_to_spreadsheet(self._spreadsheet.build_dict())
+        popup = SelectExportFolderPopup(title='Select output folder', path=Preferences.exportspreadsheetpath, onselect=self.export_to_spreadsheet2)
+        popup.open()
+
+    # takes contents on screen and creates a spreadsheet
+    def export_to_spreadsheet2(self, folder):
+        WordTranslator().write_dict_to_spreadsheet(self._spreadsheet.build_dict(), join(folder, "outputTranslations.xlsx"))
 
     # reads contents of spraedsheet and updates contents on screen
     def import_from_spreadsheet(self):
-        popup = SpreadsheetLocationPopup(title='Select spreadsheet location')
+        popup = SelectImportSpreadsheetPopup(title='Select import spreadsheet', path=Preferences.importspreadsheetpath, onselect=self.load_spreadsheet_from_file)
         popup.open()
 
-    def create_empty_spreadsheet_row(self):
-        #TODO: hardcode the correct number of output words, not just arbitrarily 3
-        self.create_spreadsheet_row("", ["", "", ""], "")
+    # loads in a spreadsheet
+    def load_spreadsheet_from_file(self, filePathWithName):
+        Translator._instance.create_spreadsheet_rows_from_dict(SpreadsheetWrangler.build_translations_dict(filePathWithName))
 
+    # creates a new blank spreadsheet row
+    def create_empty_spreadsheet_row(self):
+        outputwords = []
+        for i in range (0, Preferences.numoutputlangs):
+            outputwords.append("")
+        self.create_spreadsheet_row("", outputwords, "")
+
+    # creates a spreadsheet row, filled with given data
     def create_spreadsheet_row(self, inputWord, outputWords, imgFilePath):
         newRow = SpreadsheetRow(parentSheet=self._spreadsheet, inputWord=inputWord, outputWords=outputWords, imgFilepath=imgFilePath)
         self._spreadsheetViewer.add_widget(newRow)
 
+    # removes the given row from our spreadsheet obj and the ui
     def remove_spreadsheet_row(self, row):
         self._spreadsheetViewer.remove_widget(row)
         self._spreadsheet.rows.remove(row)
 
+    # creates the final images
     def output_images(self):
         FinalImageCreater().main("")
 
+    # creates spreadsheet rows from a dict of translations, finding images if they exist
     def create_spreadsheet_rows_from_dict(self, translationsDict):
         self.reset_spreadsheet()
         for inputWord, outputWords in translationsDict.items():
@@ -206,6 +261,7 @@ class Translator(Widget):
             newRow = SpreadsheetRow(parentSheet=self._spreadsheet, inputWord=inputWord, outputWords=outputWords, imgFilepath=filepath)
             self._spreadsheetViewer.add_widget(newRow)
 
+    # clears the spreadsheet out
     def reset_spreadsheet(self):
         self._spreadsheetViewer.clear_widgets()
         self._spreadsheet.rows = []

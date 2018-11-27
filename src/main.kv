@@ -6,6 +6,7 @@
 <Label>:
     text_size: self.width, self.height
     size: self.texture_size
+    color: 0, 0, 0, 1
 
 <Button>:
     size_hint_y: None
@@ -45,6 +46,45 @@
                 text: "↻"
                 on_press: root.download_new_thumb()
 
+<SpreadsheetTitleRow>:
+    size_hint_y: None
+    size: root.size[0], gridLayout.minimum_height
+    #size: root.size
+    #pos: root.pos
+
+    GridLayout: #Title row for the spreadsheet grid
+        id: gridLayout
+        size: root.size[0], self.minimum_height
+        pos: root.pos
+        rows: 1
+
+        Label:
+            text: "Food item"
+            halign: "center"
+
+        Label:
+            text: "Chinese"
+            halign: "center"
+
+        Label:
+            text: "Spanish"
+            halign: "center"
+
+        Label:
+            text: "Vietnamese"
+            halign: "center"
+
+        Label:
+            text: "Thumbnail"
+            halign: "center"
+            size_hint: None, None
+            size: 512, root.size[1]
+
+        Label:
+            size_hint: None, 1
+            size: 100, self.texture_size[1]
+            text: "Del"
+
 <SpreadsheetRow>:
     gridLayout: gridLayout.__self__
     size_hint_y: None
@@ -57,7 +97,9 @@
         pos: root.pos
         rows: 1
 
-<SpreadsheetLocationPopup>:
+<FilePickerPopup>:
+    _filechooser: filechooser.__self__
+    _selectButton: selectButton.__self__
     auto_dismiss: False
     size_hint: 0.5, 0.7
 
@@ -71,7 +113,7 @@
             id: filechooser
             size_hint: None, 1
             size: root.size[0], root.size[1] - popupbuttons.minimum_height
-            path: root._spreadsheetFolder
+            path: root._path
             filters: ["*.xls*"]
 
         GridLayout:
@@ -82,8 +124,9 @@
             pos: root.pos
 
             Button:
+                id: selectButton
                 text: 'Select spreadsheet'
-                on_release: root.load_spreadsheet(filechooser.path, filechooser.selection)
+                on_release: root.on_selected(filechooser.path, filechooser.selection)
 
             Button:
                 text: 'Cancel'
@@ -126,7 +169,11 @@
         id: appGrid
         size: root.size 
         pos: root.pos
-        rows: 2 
+        rows: 3 
+
+        SpreadsheetTitleRow:
+            size: root.size
+            pos: root.pos
 
         ScrollView: # spreadsheet
             size: root.size

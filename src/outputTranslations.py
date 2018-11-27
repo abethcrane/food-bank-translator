@@ -7,17 +7,11 @@ class WordTranslator():
     host = 'api.cognitive.microsofttranslator.com'
     path = '/translate?api-version=3.0'
 
-    def main(self, inputWords):
+    def main(self, inputWords, outputspreadsheet):
         print("I'll print each word when I finish translating it")
 
-        # Read in all the words and translate them
-        if len(inputWords) is 0:
-            wordsToTranslate = list(open("../words.txt"))
-        else:
-            wordsToTranslate = inputWords
-
-        dict = self.generate_translations_dict(wordsToTranslate)
-        self.write_dict_to_spreadsheet(dict)
+        dict = self.generate_translations_dict(inputWords)
+        self.write_dict_to_spreadsheet(dict, outputspreadsheet)
 
         print ("I'm finished translating words")
         
@@ -48,7 +42,7 @@ class WordTranslator():
 
         return translations
 
-    def write_dict_to_spreadsheet(self, translationsDict):
+    def write_dict_to_spreadsheet(self, translationsDict, outputspreadsheet):
         # Initialize the spreadsheet
         workbook = Workbook(write_only=True)
         worksheet = workbook.create_sheet("translations")
@@ -60,7 +54,7 @@ class WordTranslator():
             translatedWords.insert(0, inputWord)
             worksheet.append(translatedWords)
 
-        workbook.save("../translatedWords.xlsx")
+        workbook.save(outputspreadsheet)
 
     def get_translations_from_server (self, params, word):
         requestBody = [{
@@ -90,4 +84,4 @@ class WordTranslator():
         return words
 
 if __name__ == '__main__':
-    WordTranslator().main([])
+    WordTranslator().main(list(open("../words.txt")), "../translatedWords.xlsx")
