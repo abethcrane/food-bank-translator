@@ -19,14 +19,27 @@ from findAndSaveImages import ImageDownloader
 from outputImages import FinalImageCreater, SpreadsheetWrangler
 from outputTranslations import WordTranslator
 
+class Preferences():
+    importSpreadsheetPath = "."
+    exportSpreadsheetPath = "../"
+    inputLangName = "English"
+    outputLangCodes = ["zh-Hans", "es", "vi"]
+    outputLangNames = ["Simplified Chinese", "Spanish", "Vietnamese"]
+    numOutputLangs = len(outputLangCodes)
+
 class SpreadsheetTitleRow(Widget):
-    pass
+    _gridLayout = None
+
+    def initialize(self, languageNames):
+        for language in languageNames:
+            label = Label(text=language, halign="center")
+            self._gridLayout.add_widget(label, 2)  # Needs to be 2 from the end - before the thumbnail and delete columns
 
 class Spreadsheet():
     def __init__(self):
         self.rows = []
 
-    def getInputWords(self):
+    def get_input_words(self):
         inputWords = []
         for row in self.rows:
             inputWords.append(row.inputWord)
@@ -43,70 +56,36 @@ class Spreadsheet():
         return translationsDict
 
 class SpreadsheetRow(Widget):
-    _numOutputLangs = NumericProperty(3)
+    inputWord = StringProperty()
+    imgFilepath = StringProperty()
 
     def __init__(self, **kwargs):
         self.gridLayout = None
-        self.imgFilepath = StringProperty("")
-        self.inputWord = StringProperty("")
-        self.parentSheet = None
-        self.parentSheet = kwargs.pop("parentSheet")
-        self.inputWord = kwargs.pop("inputWord")
-        outputWordsList = kwargs.pop("outputWords")
         self.imgFilepath = kwargs.pop("imgFilepath")
-        self.deleteButton = None
+        inputWord = kwargs.pop("inputWord")
+        self.parentSheet = kwargs.pop("parentSheet")
+        outputWordsList = kwargs.pop("outputWords")
         self.outputWordCells = []
-        self.thumbnail = None
-
         super().__init__(**kwargs)
 
-        # Add the english word column
-        inputWordWidget = TextInput(text=self.inputWord, multiline=False)
-        inputWordWidget.bind(text=self.on_input_word_edit)
-        self.gridLayout.add_widget(inputWordWidget)
+        # For some reason this needs to go after the super init, or it doesn't appear
+        self.inputWord = inputWord
 
-        # Add on a text input for each output language
+        # Add this row into the parent spreadsheet
         if self.parentSheet is not None:
             self.parentSheet.rows.append(self)
         else:
             print("my parent sheet was none, weird")
 
-        self.numOutputLangs = len(outputWordsList)
-
         # Create input cells for each output language
+        self.numOutputLangs = len(outputWordsList)
         for i in range (0, self.numOutputLangs):
             outputLangWidget = TextInput(text=outputWordsList[i], multiline=False)
-            outputLangWidget.bind(text=self.on_translated_word_edit)
-            self.gridLayout.add_widget(outputLangWidget)
+            self.gridLayout.add_widget(outputLangWidget, 2) # Needs to be 2 from the end - before the thumbnail and delete columns
             self.outputWordCells.append(outputLangWidget)
-
-        # Add in the thumbnail cell
-        self.thumbnail = Thumbnail()
-        self.thumbnail.name = self.inputWord
-        self.thumbnail.filepath = self.imgFilepath
-        self.gridLayout.add_widget(self.thumbnail)
-
-        # Add in the delete button
-        deleteButton = Button()
-        deleteButton.text = "⌫"
-        deleteButton.background_color = (0.75, 0, 0, 1)
-        deleteButton.bind(on_press=self.delete_this_row)
-        deleteButton.size_hint = (None, 1)
-        deleteButton.size = self.size
-        self.gridLayout.add_widget(deleteButton)
 
     def delete_this_row(self, instance):
         Translator._instance.remove_spreadsheet_row(self)
-
-    def on_input_word_edit(self, instance, value):
-        self.inputWord = value
-
-    def on_translated_word_edit(self, instance, value):
-        pass
-
-    def update_image_filepath(self, newFilePath):
-        self.imgFilepath = newFilePath
-        self.thumbnail.filepath = newFilePath
 
 class Thumbnail(Widget):
     _image = None
@@ -177,16 +156,11 @@ class SelectExportFolderPopup(FilePickerPopup):
     def is_dir(self, directory, filename):
         return isdir(join(directory, filename))
 
-class Preferences():
-    numOutputLangs = 3
-    importSpreadsheetPath = "."
-    exportSpreadsheetPath = "../"
-    outputLangCodes = ["zh-Hans", "es", "vi"]
-
 class Translator(Widget):
     _instance = None
     _spreadsheet = Spreadsheet()
     _spreadsheetViewer = None
+    _spreadsheetTitleRow = None
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -195,18 +169,17 @@ class Translator(Widget):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        if Path("../translatedWords.xlsx").is_file():
-            self.import_from_spreadsheet()
-            self.create_empty_spreadsheet_row()
+        self._spreadsheetTitleRow.initialize(Preferences.outputLangNames)
+        self.create_empty_spreadsheet_row()
 
     # allow the user to bulk input food items to be translated
     def paste_input_words(self):
-        popup = InputWordsPopup(title='One food item per line')
+        popup = InputWordsPopup(title="One food item per line")
         popup.open()
 
     # overwrite all data with new images and translations
     def generate_translations(self):
-        inputWords = self._spreadsheet.getInputWords()
+        inputWords = self._spreadsheet.get_input_words()
         self.reset_spreadsheet()
         translationsDict = WordTranslator().generate_translations_dict(inputWords, Preferences.outputLangCodes)
         ImageDownloader().get_images_for_words(list(translationsDict.keys()))
@@ -227,18 +200,17 @@ class Translator(Widget):
                 retranslate = True
 
             if retranslate:
-                inputWord = row.inputWord
                 outputWordsList = WordTranslator().get_translated_words(row.inputWord, Preferences.outputLangCodes)
                 i = 0
                 for cell in row.outputWordCells:
                     cell.text = outputWordsList[i]
                     i += 1
                 # See if an image exists but we just haven't loaded it
-                row.update_image_filepath(self.try_get_filepath_for_thumbnail(row.inputWord))
+                row.imgFilepath = self.try_get_filepath_for_thumbnail(row.inputWord)
                 # If it really doesn't exist, download a new one and then try to find it
                 if row.imgFilepath is "":
                     ImageDownloader().get_images_for_words([row.inputWord])
-                    row.update_image_filepath(self.try_get_filepath_for_thumbnail(row.inputWord))
+                    row.imgFilepath = self.try_get_filepath_for_thumbnail(row.inputWord)
 
     # asks the user where to export to
     def export_to_spreadsheet(self):
@@ -251,7 +223,7 @@ class Translator(Widget):
     # takes contents on screen and creates a spreadsheet
     def export_to_spreadsheet2(self, folder):
         outputFile = join(folder, "outputTranslations.xlsx")
-        WordTranslator().write_dict_to_spreadsheet(self._spreadsheet.build_dict(), outputFile)
+        WordTranslator().write_dict_to_spreadsheet(self._spreadsheet.build_dict(), outputFile, Preferences.outputLangNames)
 
     # reads contents of spraedsheet and updates contents on screen
     def import_from_spreadsheet(self):
@@ -296,6 +268,8 @@ class Translator(Widget):
             newRow = SpreadsheetRow(parentSheet=self._spreadsheet, inputWord=inputWord, outputWords=outputWords, imgFilepath=filepath)
             self._spreadsheetViewer.add_widget(newRow)
 
+    # try to find an image for the thumbnail - tries jpg and png. doesn't do anything with casing
+    # if it can't find it, it returns empty string
     def try_get_filepath_for_thumbnail(self, word):
         # Try to come up with an appropriate image path
         filepath = "../foodThumbnails/" + word + ".jpg"
