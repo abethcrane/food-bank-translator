@@ -1,4 +1,7 @@
-﻿from kivy.app import App
+﻿from os.path import join, isdir
+from pathlib import Path
+
+from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.properties import StringProperty, NumericProperty
@@ -11,9 +14,6 @@ from kivy.uix.recycleview import RecycleView
 from kivy.uix.slider import Slider
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
-
-from os.path import join, isdir
-from pathlib import Path
 
 from findAndSaveImages import ImageDownloader
 from outputImages import FinalImageCreater, SpreadsheetWrangler
@@ -36,8 +36,8 @@ class Spreadsheet():
         translationsDict = {}
         for row in self.rows:
             translatedWords = []
-            for _, word in row.instanceToValue.items():
-                translatedWords.append(word)
+            for cell in row.outputWordCells:
+                translatedWords.append(cell.text)
             translationsDict[row.inputWord] = translatedWords
 
         return translationsDict
@@ -47,16 +47,16 @@ class SpreadsheetRow(Widget):
 
     def __init__(self, **kwargs):
         self.gridLayout = None
-        self.outputWordsList = []
         self.imgFilepath = StringProperty("")
         self.inputWord = StringProperty("")
         self.parentSheet = None
-        self.instanceToValue = {}
         self.parentSheet = kwargs.pop("parentSheet")
         self.inputWord = kwargs.pop("inputWord")
-        self.outputWordsList = kwargs.pop("outputWords")
+        outputWordsList = kwargs.pop("outputWords")
         self.imgFilepath = kwargs.pop("imgFilepath")
         self.deleteButton = None
+        self.outputWordCells = []
+        self.thumbnail = None
 
         super().__init__(**kwargs)
 
@@ -71,20 +71,20 @@ class SpreadsheetRow(Widget):
         else:
             print("my parent sheet was none, weird")
 
-        self.numOutputLangs = len(self.outputWordsList)
+        self.numOutputLangs = len(outputWordsList)
 
         # Create input cells for each output language
         for i in range (0, self.numOutputLangs):
-            outputLangWidget = TextInput(text=self.outputWordsList[i], multiline=False)
+            outputLangWidget = TextInput(text=outputWordsList[i], multiline=False)
             outputLangWidget.bind(text=self.on_translated_word_edit)
             self.gridLayout.add_widget(outputLangWidget)
-            self.instanceToValue[outputLangWidget] = self.outputWordsList[i]
+            self.outputWordCells.append(outputLangWidget)
 
         # Add in the thumbnail cell
-        newThumb = Thumbnail()
-        newThumb.name = self.inputWord
-        newThumb.filepath = self.imgFilepath
-        self.gridLayout.add_widget(newThumb)
+        self.thumbnail = Thumbnail()
+        self.thumbnail.name = self.inputWord
+        self.thumbnail.filepath = self.imgFilepath
+        self.gridLayout.add_widget(self.thumbnail)
 
         # Add in the delete button
         deleteButton = Button()
@@ -102,7 +102,11 @@ class SpreadsheetRow(Widget):
         self.inputWord = value
 
     def on_translated_word_edit(self, instance, value):
-        self.instanceToValue[instance] = value
+        pass
+
+    def update_image_filepath(self, newFilePath):
+        self.imgFilepath = newFilePath
+        self.thumbnail.filepath = newFilePath
 
 class Thumbnail(Widget):
     _image = None
@@ -215,8 +219,8 @@ class Translator(Widget):
         for row in spreadsheetRows:
             # If the row has any empty words, retranslate it
             retranslate = False
-            for word in row.outputWordsList:
-                if word is "":
+            for cell in row.outputWordCells:
+                if cell.text is "":
                     retranslate = True
             # If the row is missing an image filepath, we also need to retranslate it
             if row.imgFilepath is "":
@@ -225,17 +229,16 @@ class Translator(Widget):
             if retranslate:
                 inputWord = row.inputWord
                 outputWordsList = WordTranslator().get_translated_words(row.inputWord, Preferences.outputLangCodes)
-
+                i = 0
+                for cell in row.outputWordCells:
+                    cell.text = outputWordsList[i]
+                    i += 1
                 # See if an image exists but we just haven't loaded it
-                imgFilepath = self.try_get_filepath_for_thumbnail(row.inputWord)
+                row.update_image_filepath(self.try_get_filepath_for_thumbnail(row.inputWord))
                 # If it really doesn't exist, download a new one and then try to find it
-                if imgFilepath is "":
+                if row.imgFilepath is "":
                     ImageDownloader().get_images_for_words([row.inputWord])
-                    imgFilepath = self.try_get_filepath_for_thumbnail(row.inputWord)
-
-                # Remove the row (easier than trying to edit it =/)
-                self.remove_spreadsheet_row(row)
-                self.create_spreadsheet_row(inputWord, outputWordsList, imgFilepath)
+                    row.update_image_filepath(self.try_get_filepath_for_thumbnail(row.inputWord))
 
     # asks the user where to export to
     def export_to_spreadsheet(self):
