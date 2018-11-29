@@ -9,3 +9,5 @@ images/*
 __pycache__
 .vscode/settings.json
 translatedWords.xlsx
+src/dist/*
+src/build/*

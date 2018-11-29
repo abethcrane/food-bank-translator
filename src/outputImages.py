@@ -1,4 +1,5 @@
 import sys, textwrap
+from os.path import join
 from openpyxl import load_workbook
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
@@ -11,9 +12,9 @@ thismodule.imageWidth = 2480
 thismodule.imageHeight = 1754
 thismodule.horizontalPadding = 50
 thismodule.lineSpacingHeight = 100
-thismodule.maxFontSize = 400
+thismodule.maxFontSize = 200
 thismodule.idealFontSize = thismodule.maxFontSize
-thismodule.fontLocation = "/Library/Fonts/Arial Unicode.ttf"
+thismodule.fontLocation = "NotoSansCJKsc-Light.otf"
 thismodule.thumbnailSize = (512, 512)
 
 class SpreadsheetWrangler():
@@ -84,12 +85,7 @@ class FinalImageCreater():
             imageDrawer = ImageDraw.Draw(outputImage)            
 
             # Try to find the thumbnail for this word
-            filepath = "../foodThumbnails/" + inputWord + ".jpg"
-            if not Path(filepath).is_file():
-                filepath = "../foodThumbnails/" + inputWord + ".png"
-                if not Path(filepath).is_file():
-                    print ("Could not find an appropriate thumbnail for " + inputWord)
-                    filepath = None
+            filepath = self.try_get_filepath_for_thumbnail(inputWord)
 
             # Handle printing the thumbnail if there is one
             if filepath is None:
@@ -99,16 +95,16 @@ class FinalImageCreater():
             else: 
                 foodThumbnailImage = Image.open(filepath)
                 # Ensure the thumbnail is actually thumbnail size
-                foodThumbnailImage.thumbnail(thismodule.thumbnailsize, Image.ANTIALIAS)
+                foodThumbnailImage.thumbnail(thismodule.thumbnailSize, Image.ANTIALIAS)
                 # Get the dimensions for the thumbnail
                 thumbnailWidth, thumbnailHeight = foodThumbnailImage.size
-                leftSideOfThumbnail = thismodule.imageWidth - thumbnailWidth - (thismodule.horizontalPadding * 2)
+                leftSideOfThumbnail = thismodule.imageWidth - thumbnailWidth - thismodule.horizontalPadding
                 # Paste the thumbnail into the image
                 thumbnailOffset = leftSideOfThumbnail, int((thismodule.imageHeight/2) - (thumbnailHeight/2)) # on the right, vertically centered
                 outputImage.paste(foodThumbnailImage, thumbnailOffset)
 
-            # The text has a horizontal padding at its left, so can't take up all the space before the thumbnail
-            textWidth = leftSideOfThumbnail - thismodule.horizontalPadding 
+            # The text has a horizontal padding at its left and right, so can't take up all the space before the thumbnail
+            textWidth = leftSideOfThumbnail - (thismodule.horizontalPadding  * 2)
 
             # Calculate the starting point of the text, so that it'll be vertically centered
             thismodule.idealfontsize = FontManipulator.find_font_size_to_fit_height(wordsToPrint, thismodule.imageHeight, thismodule.fontLocation, thismodule.maxFontSize)
@@ -124,10 +120,28 @@ class FinalImageCreater():
                 word_y_pos += h + thismodule.lineSpacingHeight
 
             # Save off the image
-            outputImage.save("../images/" + inputWord + ".png")
-            
+            outputImage.save(join(join("..", "images"), inputWord  + ".png"))
+
             print(inputWord)
         print("I'm finished creating output images")
+		
+
+    # try to find an image for the thumbnail - tries jpg and png. doesn't do anything with casing
+    # if it can't find it, it returns empty string
+    @staticmethod
+    def try_get_filepath_for_thumbnail(word):
+        # Try to come up with an appropriate image path
+        filepath = join("..", "foodThumbnails")
+        filepath = join(filepath, word + ".jpg")	
+        if not Path(filepath).is_file():
+            filepath = join("..", "foodThumbnails")
+            filepath = join(filepath, word + ".png")
+            if not Path(filepath).is_file():
+                print ("Could not find an appropriate thumbnail for " + word)
+                filepath = ""
+
+        return filepath
+
             
 class FontManipulator():
     @staticmethod
@@ -141,7 +155,7 @@ class FontManipulator():
 
         minfontsize = maxSize
         for line in lines:
-            linesize = FontManipulator.find_font_size_to_fit(line, height - thismodule.line_spacing_height, fontLocation, maxSize, False)
+            linesize = FontManipulator.find_font_size_to_fit(line, height - thismodule.lineSpacingHeight, fontLocation, maxSize, False)
             if linesize < minfontsize:
                 minfontsize = linesize
 
@@ -209,4 +223,4 @@ class FontManipulator():
         return totalH - thismodule.lineSpacingHeight # we don't need line spacing after the final word
         
 if __name__ == '__main__':
-    FinalImageCreater().main("../translatedWords.xlsx")
+    FinalImageCreater().main(join("..", "translatedWords.xlsx"))

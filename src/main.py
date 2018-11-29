@@ -26,6 +26,7 @@ class Preferences():
     outputLangCodes = ["zh-Hans", "es", "vi"]
     outputLangNames = ["Simplified Chinese", "Spanish", "Vietnamese"]
     numOutputLangs = len(outputLangCodes)
+    outputSpreadsheetName = "outputTranslations.xlsx"
 
 class SpreadsheetTitleRow(Widget):
     _gridLayout = None
@@ -81,6 +82,7 @@ class SpreadsheetRow(Widget):
         self.numOutputLangs = len(outputWordsList)
         for i in range (0, self.numOutputLangs):
             outputLangWidget = TextInput(text=outputWordsList[i], multiline=False)
+			
             self.gridLayout.add_widget(outputLangWidget, 2) # Needs to be 2 from the end - before the thumbnail and delete columns
             self.outputWordCells.append(outputLangWidget)
 
@@ -89,7 +91,7 @@ class SpreadsheetRow(Widget):
 
 class Thumbnail(Widget):
     _image = None
-    filepath = StringProperty("")
+    filepath = StringProperty()
 
     def __init__(self, **kwargs):
         self.name = StringProperty("")
@@ -97,6 +99,7 @@ class Thumbnail(Widget):
         self.tryTime = 0
         Clock.schedule_interval(self.reload_img, 10)
 
+    # reload from disc in case the file was manually changed by either user/program
     def reload_img(self, dt):
         self._image.reload()
 
@@ -206,11 +209,11 @@ class Translator(Widget):
                     cell.text = outputWordsList[i]
                     i += 1
                 # See if an image exists but we just haven't loaded it
-                row.imgFilepath = self.try_get_filepath_for_thumbnail(row.inputWord)
+                row.imgFilepath = FinalImageCreater.try_get_filepath_for_thumbnail(row.inputWord)
                 # If it really doesn't exist, download a new one and then try to find it
                 if row.imgFilepath is "":
                     ImageDownloader().get_images_for_words([row.inputWord])
-                    row.imgFilepath = self.try_get_filepath_for_thumbnail(row.inputWord)
+                    row.imgFilepath = FinalImageCreater.try_get_filepath_for_thumbnail(row.inputWord)
 
     # asks the user where to export to
     def export_to_spreadsheet(self):
@@ -222,7 +225,7 @@ class Translator(Widget):
 
     # takes contents on screen and creates a spreadsheet
     def export_to_spreadsheet2(self, folder):
-        outputFile = join(folder, "outputTranslations.xlsx")
+        outputFile = join(folder, Preferences.outputSpreadsheetName)
         WordTranslator().write_dict_to_spreadsheet(self._spreadsheet.build_dict(), outputFile, Preferences.outputLangNames)
 
     # reads contents of spraedsheet and updates contents on screen
@@ -256,30 +259,17 @@ class Translator(Widget):
 
     # creates the final images
     def output_images(self):
-        FinalImageCreater().main("")
+        FinalImageCreater().main(join(Preferences.exportSpreadsheetPath, Preferences.outputSpreadsheetName))
 
     # creates spreadsheet rows from a dict of translations, finding images if they exist
     def create_spreadsheet_rows_from_dict(self, translationsDict):
         self.reset_spreadsheet()
         for inputWord, outputWords in translationsDict.items():
-            filepath = self.try_get_filepath_for_thumbnail(inputWord)
+            filepath = FinalImageCreater.try_get_filepath_for_thumbnail(inputWord)
 
             # Add the row to the spreadsheet viewer
             newRow = SpreadsheetRow(parentSheet=self._spreadsheet, inputWord=inputWord, outputWords=outputWords, imgFilepath=filepath)
             self._spreadsheetViewer.add_widget(newRow)
-
-    # try to find an image for the thumbnail - tries jpg and png. doesn't do anything with casing
-    # if it can't find it, it returns empty string
-    def try_get_filepath_for_thumbnail(self, word):
-        # Try to come up with an appropriate image path
-        filepath = "../foodThumbnails/" + word + ".jpg"
-        if not Path(filepath).is_file():
-            filepath = "../foodThumbnails/" + word + ".png"
-            if not Path(filepath).is_file():
-                print ("Could not find an appropriate thumbnail for " + word)
-                filepath = ""
-
-        return filepath
 
     # clears the spreadsheet out
     def reset_spreadsheet(self):

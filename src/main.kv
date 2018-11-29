@@ -1,7 +1,7 @@
 #:kivy 1.10
 
 <Label, TextInput, Button>:
-    font_name: "/Library/Fonts/Arial Unicode.ttf"
+    font_name: "NotoSansCJKsc-Light.otf"
 
 <Label>:
     text_size: self.width, self.height
@@ -25,7 +25,7 @@
     GridLayout: #Displays the image above the 2 buttons
         id: gridLayout
         size_hint: None, None
-        size: root.size[0], image.texture_size[1] + newThumbButtons.minimum_height
+        size: root.size[0], image.texture_size[1] + newThumbButtons.minimum_height # I want to do something like this to make x and y work nice together (image.texture_size[1] * 300/image.texture_size[0]) 
         pos: root.pos
         rows: 2
 
@@ -40,10 +40,10 @@
             cols: 2
 
             Button:
-                text: "↺"
+                text: "<"
                 on_press: root.download_prev_thumb()
             Button:
-                text: "↻"
+                text: ">"
                 on_press: root.download_new_thumb()
 
 <SpreadsheetTitleRow>:
@@ -100,11 +100,12 @@
             name: root.inputWord
         
         Button:
-            text: "⌫"
+            text: " X "
+			color: (1, 1, 1, 1)
             background_color: (0.75, 0, 0, 1)
-            on_press: root.delete_this_row()
+            on_press: root.delete_this_row(self)
             size_hint: (None, 1)
-            size: self.size
+            size: 100, self.size[1]
 
 <FilePickerPopup>:
     _filechooser: filechooser.__self__
