@@ -164,6 +164,7 @@ class Translator(Widget):
     _spreadsheet = Spreadsheet()
     _spreadsheetViewer = None
     _spreadsheetTitleRow = None
+    _buttonsGrid = None
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -174,6 +175,22 @@ class Translator(Widget):
         super().__init__(**kwargs)
         self._spreadsheetTitleRow.initialize(Preferences.outputLangNames)
         self.create_empty_spreadsheet_row()
+        Window.maximize()
+        Window.bind(on_resize=self.on_window_resize)
+
+    def on_window_resize(self, window, width, height):
+        # Currently there's an issue
+        # https://github.com/kivy/kivy/issues/6082
+        # width gets fired twice - the 2nd time the width is doubled
+        if width/2 < 700:
+            self._buttonsGrid.rows = 7
+            self._buttonsGrid.height = 700
+        else:
+            self._buttonsGrid.rows = 1
+            if width/2 < 1000:
+                self._buttonsGrid.height = 200
+            else:
+                self._buttonsGrid.height = 100
 
     # allow the user to bulk input food items to be translated
     def paste_input_words(self):
@@ -278,7 +295,6 @@ class Translator(Widget):
 
 class MainApp(App):
     def build(self):
-        Window.maximize()
         return Translator()
 
 if __name__ == '__main__':

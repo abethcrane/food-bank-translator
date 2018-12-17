@@ -10,8 +10,6 @@
 
 <Button>:
     size_hint_y: None
-    text_size: self.width, None
-    size: self.texture_size
     padding_x: 5
     padding_y: 5
     valign: "middle"
@@ -170,6 +168,8 @@
 <Translator>:  
     _spreadsheetViewer: spreadsheetViewer.__self__
     _spreadsheetTitleRow: spreadsheetTitleRow.__self__
+    _buttonsGrid: buttonsGrid.__self__
+
     canvas:
         Rectangle:
             size: self.size
@@ -203,34 +203,42 @@
                 spacing: 10
 
         GridLayout: #buttons
+            id: buttonsGrid
             size_hint: 1, None
-            height: self.minimum_height
+            size: root.size[0], 200
             rows: 1
 
             Button:
                 text: "Paste in input words"
                 on_press: root.paste_input_words()
+                size_hint_y: 1
 
             Button:
                 text: "Import from spreadsheet"
                 on_press: root.import_from_spreadsheet()
+                size_hint_y: 1
 
             Button:
                 text: "Generate missing translations"
                 on_press: root.generate_missing_translations()
+                size_hint_y: 1
 
             Button:
                 text: "Redo all translations"
                 on_press: root.generate_translations()
+                size_hint_y: 1
 
             Button:
                 text: "Export to spreadsheet"
                 on_press: root.export_to_spreadsheet()
+                size_hint_y: 1
 
             Button:
                 text: "Create output images"
                 on_press: root.output_images()
+                size_hint_y: 1
 
             Button:
                 text: "Add new word"
                 on_press: root.create_empty_spreadsheet_row()
+                size_hint_y: 1
