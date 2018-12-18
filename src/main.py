@@ -15,9 +15,10 @@ from kivy.uix.slider import Slider
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
-from findAndSaveImages import ImageDownloader
-from outputImages import FinalImageCreater, SpreadsheetWrangler
-from outputTranslations import WordTranslator
+from imageDownloader import ImageDownloader
+from finalImageCreator import FinalImageCreater
+from spreadsheetWrangler import SpreadsheetWrangler
+from wordTranslator import WordTranslator
 
 class Preferences():
     importSpreadsheetPath = "."
@@ -34,7 +35,8 @@ class SpreadsheetTitleRow(Widget):
     def initialize(self, languageNames):
         for language in languageNames:
             label = Label(text=language, halign="center")
-            self._gridLayout.add_widget(label, 2)  # Needs to be 2 from the end - before the thumbnail and delete columns
+            # Needs to be 2 from the end - before the thumbnail and delete columns
+            self._gridLayout.add_widget(label, 2)
 
 class Spreadsheet():
     def __init__(self):
@@ -82,8 +84,8 @@ class SpreadsheetRow(Widget):
         self.numOutputLangs = len(outputWordsList)
         for i in range (0, self.numOutputLangs):
             outputLangWidget = TextInput(text=outputWordsList[i], multiline=False)
-			
-            self.gridLayout.add_widget(outputLangWidget, 2) # Needs to be 2 from the end - before the thumbnail and delete columns
+			# Needs to be 2 from the end - before the thumbnail and delete columns
+            self.gridLayout.add_widget(outputLangWidget, 2)
             self.outputWordCells.append(outputLangWidget)
 
     def delete_this_row(self, instance):

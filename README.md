@@ -28,12 +28,12 @@ Still a WIP, working with <a href="http://www.pmfb.org/">a Seattle organization<
 <ul>Modify the <em>toLanguages.txt</em> file to include whichever languages you desire</ul>
 <ul>Modify the <em>words.txt</em> to include the words you'd like to translate</ul>
 <ul>Create a file called translatorSubscriptionKey.txt and enter your azure translation subscription key in</ul>
-<ul>Run <code>python3 outputTranslations.py</code> - this will open the words and toLangugaes files and output a spreadsheet of translations for each word</ul>
+<ul>Run <code>python3 wordTranslator.py</code> - this will open the words and toLanguages files and output a spreadsheet of translations for each word</ul>
 <ul>Open the spreadsheet <em>translatedWords.xlsx</em></ul>
 <ul>Modify any translations you like</ul>
-<ul>Run <code>python3 findAndSaveImages.py</code> - this will open the spreadsheet and download an image for each english word</ul>
+<ul>Run <code>python3 imageDownloader.py</code> - this will open the spreadsheet and download an image for each english word</ul>
 <ul>Open the <em>foodThumbnails</em> folder and check the images. If any images aren't suitable, replace them with new ones of the same name</ul>
-<ul>Run <code>python3 outputImages.py</code> - this will open the spreadsheet and output an image for each word, with the translations + thumbnail image</ul>
+<ul>Run <code>python3 finalImageCreator.py</code> - this will open the spreadsheet and output an image for each word, with the translations + thumbnail image</ul>
 
 <h2>Quirks</h2>
 <ul>Currently expects a newline at the start of the toLanguages file</ul>
