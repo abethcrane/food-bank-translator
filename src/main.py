@@ -1,4 +1,4 @@
-﻿from os.path import join, isdir
+﻿from os.path import abspath, join, isdir
 from pathlib import Path
 
 from kivy.app import App
@@ -16,18 +16,19 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
 from imageDownloader import ImageDownloader
-from finalImageCreator import FinalImageCreater
+from finalImageCreator import FinalImageCreator
 from spreadsheetWrangler import SpreadsheetWrangler
 from wordTranslator import WordTranslator
 
 class Preferences():
     importSpreadsheetPath = "."
-    exportSpreadsheetPath = "../"
+    exportSpreadsheetPath = abspath("..")
     inputLangName = "English"
     outputLangCodes = ["zh-Hans", "es", "vi"]
     outputLangNames = ["Simplified Chinese", "Spanish", "Vietnamese"]
     numOutputLangs = len(outputLangCodes)
     outputSpreadsheetName = "outputTranslations.xlsx"
+    outputImagesLocation = join("..", "images")
 
 class SpreadsheetTitleRow(Widget):
     _gridLayout = None
@@ -228,11 +229,11 @@ class Translator(Widget):
                     cell.text = outputWordsList[i]
                     i += 1
                 # See if an image exists but we just haven't loaded it
-                row.imgFilepath = FinalImageCreater.try_get_filepath_for_thumbnail(row.inputWord)
+                row.imgFilepath = FinalImageCreator.try_get_filepath_for_thumbnail(row.inputWord)
                 # If it really doesn't exist, download a new one and then try to find it
                 if row.imgFilepath is "":
                     ImageDownloader().get_images_for_words([row.inputWord])
-                    row.imgFilepath = FinalImageCreater.try_get_filepath_for_thumbnail(row.inputWord)
+                    row.imgFilepath = FinalImageCreator.try_get_filepath_for_thumbnail(row.inputWord)
 
     # asks the user where to export to
     def export_to_spreadsheet(self):
@@ -245,7 +246,7 @@ class Translator(Widget):
     # takes contents on screen and creates a spreadsheet
     def export_to_spreadsheet2(self, folder):
         outputFile = join(folder, Preferences.outputSpreadsheetName)
-        WordTranslator().write_dict_to_spreadsheet(self._spreadsheet.build_dict(), outputFile, Preferences.outputLangNames)
+        SpreadsheetWrangler.write_dict_to_spreadsheet(self._spreadsheet.build_dict(), outputFile, Preferences.outputLangNames)
 
     # reads contents of spraedsheet and updates contents on screen
     def import_from_spreadsheet(self):
@@ -278,13 +279,13 @@ class Translator(Widget):
 
     # creates the final images
     def output_images(self):
-        FinalImageCreater().main(join(Preferences.exportSpreadsheetPath, Preferences.outputSpreadsheetName))
+        FinalImageCreator().main(join(Preferences.exportSpreadsheetPath, Preferences.outputSpreadsheetName), Preferences.outputImagesLocation)
 
     # creates spreadsheet rows from a dict of translations, finding images if they exist
     def create_spreadsheet_rows_from_dict(self, translationsDict):
         self.reset_spreadsheet()
         for inputWord, outputWords in translationsDict.items():
-            filepath = FinalImageCreater.try_get_filepath_for_thumbnail(inputWord)
+            filepath = FinalImageCreator.try_get_filepath_for_thumbnail(inputWord)
 
             # Add the row to the spreadsheet viewer
             newRow = SpreadsheetRow(parentSheet=self._spreadsheet, inputWord=inputWord, outputWords=outputWords, imgFilepath=filepath)

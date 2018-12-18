@@ -1,15 +1,14 @@
-import sys
+import os, sys
 from os.path import join
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
-
-from spreadsheetWrangler import SpreadsheetWrangler
 from fontManipulator import FontManipulator
+from spreadsheetWrangler import SpreadsheetWrangler
 
 thismodule = sys.modules[__name__]
 
 # consts
-#Width and height are determined as half A4 paper at 300 dpi
+# Width and height are determined as half A4 paper at 300 dpi
 thismodule.imageWidth = 2480
 thismodule.imageHeight = 1754
 thismodule.horizontalPadding = 50
@@ -19,11 +18,14 @@ thismodule.idealFontSize = thismodule.maxFontSize
 thismodule.fontLocation = "NotoSansCJKsc-Light.otf"
 thismodule.thumbnailSize = (512, 512)
 
-class FinalImageCreater():
+class FinalImageCreator():
 
     translationsDict = {}
     
-    def main(self, spreadsheetLocation):           
+    def main(self, spreadsheetLocation, outputFolder):           
+        if not os.path.exists(outputFolder):
+            os.makedirs(outputFolder)
+
         self.translationsDict = SpreadsheetWrangler.build_translations_dict(spreadsheetLocation)
 
         print("I'll print each word when I finish creating the output image for it")
@@ -76,7 +78,7 @@ class FinalImageCreater():
                 word_y_pos += h + thismodule.lineSpacingHeight
 
             # Save off the image
-            outputImage.save(join(join("..", "images"), inputWord  + ".png"))
+            outputImage.save(join(outputFolder, inputWord  + ".png"))
 
             print(inputWord)
         print("I'm finished creating output images")
@@ -99,4 +101,4 @@ class FinalImageCreater():
         return filepath
 
 if __name__ == '__main__':
-    FinalImageCreater().main(join("..", "translatedWords.xlsx"))
+    FinalImageCreator().main(join("..", "translatedWords.xlsx"), join("..", "images"))

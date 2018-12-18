@@ -1,5 +1,5 @@
 import http.client, json, urllib.parse, uuid
-from openpyxl import Workbook
+from spreadsheetWrangler import SpreadsheetWrangler
 
 class WordTranslator():
 
@@ -11,7 +11,7 @@ class WordTranslator():
         print("I'll print each word when I finish translating it")
 
         dict = self.generate_translations_dict(inputWords, outputLangCodes)
-        self.write_dict_to_spreadsheet(dict, outputspreadsheet, outputLangCodes)
+        SpreadsheetWrangler.write_dict_to_spreadsheet(dict, outputspreadsheet, outputLangCodes)
 
         print ("I'm finished translating words")
         
@@ -36,25 +36,11 @@ class WordTranslator():
         return translations
 
     def get_translated_words(self, inputWord, outputLangs):
-        result = self.get_translations_from_server(inputWord, outputLangs)
+        result = self.__get_translations_from_server(inputWord, outputLangs)
         return self.get_words_from_result(result)
 
-    def write_dict_to_spreadsheet(self, outputLangNames, translationsDict, outputspreadsheet):
-        # Initialize the spreadsheet
-        workbook = Workbook(write_only=True)
-        worksheet = workbook.create_sheet("translations")
-        worksheet.append(["English"] + outputLangNames)
-
-        # Append the list of words  to the spreadsheet
-        for inputWord, outputWords in translationsDict.items():
-            translatedWords = outputWords
-            translatedWords.insert(0, inputWord)
-            worksheet.append(translatedWords)
-
-        workbook.save(outputspreadsheet)
-
     # gets server translation json for a given word to the given output langs
-    def get_translations_from_server(self, word, outputLangs):
+    def __get_translations_from_server(self, word, outputLangs):
         params = ""
         for lang in outputLangs:
             params += "&to=" + lang.lstrip().rstrip()

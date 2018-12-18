@@ -6,6 +6,17 @@ class FontManipulator():
     def get_font_with_offset(font, text):
         return map(sum, zip(font.getsize(text), font.getoffset(text)))
 
+    @staticmethod    
+    # Calculates the total text height for a list of words
+    def calculate_total_text_height(list, width, fontLocation, idealFontSize, lineSpacingHeight):
+        totalH = 0
+        for line in list:
+            fontSize = FontManipulator.find_font_size_to_fit_width(line, width, fontLocation, idealFontSize)
+            font = ImageFont.truetype(fontLocation, fontSize)
+            _, h = FontManipulator.get_font_with_offset(font, line)
+            totalH += h + lineSpacingHeight
+        return totalH - lineSpacingHeight # we don't need line spacing after the final word
+
     @staticmethod
     def find_font_size_to_fit_height(lines, height, fontLocation, maxSize, lineSpacingHeight):
         # If we have to fit 5 lines in 2000 pixels then we have to fit 1 line in 400, so let's just calculate the max size to do that
@@ -13,18 +24,18 @@ class FontManipulator():
 
         minfontsize = maxSize
         for line in lines:
-            linesize = FontManipulator.find_font_size_to_fit(line, height - lineSpacingHeight, fontLocation, maxSize, False)
+            linesize = FontManipulator.__find_font_size_to_fit(line, height - lineSpacingHeight, fontLocation, maxSize, False)
             if linesize < minfontsize:
                 minfontsize = linesize
-
         return minfontsize
 
     @staticmethod
     def find_font_size_to_fit_width(text, width, fontLocation, maxSize):
-        return FontManipulator.find_font_size_to_fit(text, width, fontLocation, maxSize, True)
+        minfontsize = FontManipulator.__find_font_size_to_fit(text, width, fontLocation, maxSize, True)
+        return minfontsize
 
     @staticmethod
-    def find_font_size_to_fit(text, fit_value, fontLocation, maxSize, isWidth):
+    def __find_font_size_to_fit(text, fit_value, fontLocation, maxSize, isWidth):
         # Maybe it's already perfect
         font = ImageFont.truetype(fontLocation, maxSize)
         w, h = FontManipulator.get_font_with_offset(font, text)
@@ -68,15 +79,4 @@ class FontManipulator():
             # Don't want to get caught inf looping
             if size == prevsize:
                 return lowerBound
-
-    @staticmethod    
-    # Calculates the total text height for a list of words
-    def calculate_total_text_height(list, width, fontLocation, idealFontSize, lineSpacingHeight):
-        totalH = 0
-        for line in list:
-            fontSize = FontManipulator.find_font_size_to_fit_width(line, width, fontLocation, idealFontSize)
-            font = ImageFont.truetype(fontLocation, fontSize)
-            _, h = FontManipulator.get_font_with_offset(font, line)
-            totalH += h + lineSpacingHeight
-        return totalH - lineSpacingHeight # we don't need line spacing after the final word
         

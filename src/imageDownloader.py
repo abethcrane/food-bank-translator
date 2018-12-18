@@ -1,8 +1,7 @@
 ﻿import json, requests, sys, urllib.parse, uuid
-from openpyxl import Workbook, load_workbook
-from openpyxl.drawing.image import Image
-from PIL import Image
 from io import BytesIO
+from PIL import Image
+from spreadsheetWrangler import SpreadsheetWrangler
 
 thismodule = sys.modules[__name__]
 
@@ -18,17 +17,8 @@ class ImageDownloader():
     def main(self, spreadsheetLocation):
         print("I'll print each word when I finish downloading a thumbnail for it")
 
-        # Initialize the spreadsheet
-        workbook = load_workbook(filename = spreadsheetLocation)
-        worksheet = workbook["translations"]
-
-        for rowNum in range(2, worksheet.max_row + 1):
-            englishWordCell = "A{}".format(rowNum)
-            englishWord = worksheet[englishWordCell].value
-
-            if englishWord is None or englishWord is "":
-                continue
-
+        englishWords = SpreadsheetWrangler.get_english_words(spreadsheetLocation)
+        for englishWord in englishWords:
             (img, _) = self.get_next_image(englishWord, 0)
             if img is None:
                 print("I couldn't find an image for " + englishWord)
@@ -67,7 +57,44 @@ class ImageDownloader():
         imageFilename = "../foodThumbnails/" + word + ".jpg"
         img.convert('RGB').save(imageFilename, "JPEG")
 
-    def get_image_url_for_word(self, word, retryTime):
+    def get_next_image(self, word, n):
+        if (n < 0):
+            n = 0
+        img = self.__get_nth_image_for_word(word, n)
+        retryTime = 0
+        while img is None and retryTime < thismodule.maxTries:
+            retryTime += 1
+            n += 1
+            img = self.__get_nth_image_for_word(word, n)
+
+        return img, n
+
+    def get_prev_image(self, word, n):
+        if (n < 0):
+            n = thismodule.resultsPerQuery - 1
+        img = self.__get_nth_image_for_word(word, n)
+        retryTime = 0
+        while img is None and retryTime < thismodule.maxTries:
+            retryTime += 1
+            n -= 1
+            img = self.__get_nth_image_for_word(word, n)
+
+        return img, n
+
+    def __get_nth_image_for_word(self, word, n):
+        url = self.__get_image_url_for_word(word, n)
+        img = None
+        try:
+            # Download the image
+            r = requests.get(url)
+            img = Image.open(BytesIO(r.content))
+        except OSError:
+            # This is okay, we'll just try another one
+            print(url + " could not be downloaded.")
+
+        return img
+
+    def __get_image_url_for_word(self, word, retryTime):
         #consider prefacing word with 'edible'
         headers = {"Ocp-Apim-Subscription-Key" : self.subscriptionKey}
         params  = {"q": word}
@@ -80,44 +107,6 @@ class ImageDownloader():
         except requests.exceptions.HTTPError:
             print("Could not find results for " + word)
             return ""
-
-    def get_nth_image_for_word(self, word, n):
-        url = self.get_image_url_for_word(word, n)
-        img = None
-        try:
-            # Download the image
-            r = requests.get(url)
-            img = Image.open(BytesIO(r.content))
-        except OSError:
-            # This is okay, we'll just try another one
-            print(url + " could not be downloaded.")
-
-        return img
-
-    def get_next_image(self, word, n):
-        if (n < 0):
-            n = 0
-        img = self.get_nth_image_for_word(word, n)
-        retryTime = 0
-        while img is None and retryTime < thismodule.maxTries:
-            retryTime += 1
-            n += 1
-            img = self.get_nth_image_for_word(word, n)
-
-        return img, n
-
-    def get_prev_image(self, word, n):
-        if (n < 0):
-            n = thismodule.resultsPerQuery - 1
-        img = self.get_nth_image_for_word(word, n)
-        retryTime = 0
-        while img is None and retryTime < thismodule.maxTries:
-            retryTime += 1
-            n -= 1
-            img = self.get_nth_image_for_word(word, n)
-
-        return img, n
-
 
 if __name__ == '__main__':
     ImageDownloader().main("../translatedWords.xlsx")
