@@ -18,12 +18,12 @@
 <Thumbnail>:
     _image: image.__self__
     size_hint: None, None
-    size: 512, gridLayout.size[1]
+    size: 300, gridLayout.size[1]
     
     GridLayout: #Displays the image above the 2 buttons
         id: gridLayout
         size_hint: None, None
-        size: root.size[0], image.texture_size[1] + newThumbButtons.minimum_height # I want to do something like this to make x and y work nice together (image.texture_size[1] * 300/image.texture_size[0]) 
+        size: root.size[0], (image.texture_size[1] * 300/(image.texture_size[0]+0.01)) + newThumbButtons.minimum_height
         pos: root.pos
         rows: 2
 
@@ -66,7 +66,7 @@
             text: "Thumbnail"
             halign: "center"
             size_hint: None, None
-            size: 512, root.size[1]
+            size: 300, root.size[1]
 
         Label:
             size_hint: None, 1
@@ -165,7 +165,7 @@
             Button:
                 text: 'Cancel'
                 on_release: root.dismiss()
-<Translator>:  
+<Translator>:
     _spreadsheetViewer: spreadsheetViewer.__self__
     _spreadsheetTitleRow: spreadsheetTitleRow.__self__
     _buttonsGrid: buttonsGrid.__self__
@@ -205,7 +205,7 @@
         GridLayout: #buttons
             id: buttonsGrid
             size_hint: 1, None
-            size: root.size[0], 200
+            size: root.size[0], 100
             rows: 1
 
             Button:

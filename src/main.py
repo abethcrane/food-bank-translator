@@ -88,7 +88,7 @@ class SpreadsheetRow(Widget):
 			# Needs to be 2 from the end - before the thumbnail and delete columns
             self.gridLayout.add_widget(outputLangWidget, 2)
             self.outputWordCells.append(outputLangWidget)
-
+			
     def delete_this_row(self, instance):
         Translator._instance.remove_spreadsheet_row(self)
 
@@ -182,18 +182,19 @@ class Translator(Widget):
         Window.bind(on_resize=self.on_window_resize)
 
     def on_window_resize(self, window, width, height):
-        # Currently there's an issue
+        # Currently there's an issue on macos
         # https://github.com/kivy/kivy/issues/6082
         # width gets fired twice - the 2nd time the width is doubled
-        if width/2 < 700:
+		# so on macos we need to use width/2
+        if width < 700:
             self._buttonsGrid.rows = 7
-            self._buttonsGrid.height = 700
+            self._buttonsGrid.height = 350
         else:
             self._buttonsGrid.rows = 1
-            if width/2 < 1000:
-                self._buttonsGrid.height = 200
-            else:
+            if width < 1000:
                 self._buttonsGrid.height = 100
+            else:
+                self._buttonsGrid.height = 50
 
     # allow the user to bulk input food items to be translated
     def paste_input_words(self):
