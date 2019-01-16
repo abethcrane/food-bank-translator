@@ -1,6 +1,6 @@
-﻿import webbrowser
+﻿import atexit, configparser, os, webbrowser
 
-from os.path import abspath, join, isdir
+from os.path import abspath, join, isdir, exists
 
 from kivy.app import App
 from kivy.clock import Clock
@@ -15,6 +15,7 @@ from kivy.uix.recycleview import RecycleView
 from kivy.uix.slider import Slider
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
+from kivy.utils import platform
 
 from imageDownloader import ImageDownloader
 from finalImageCreator import FinalImageCreator
@@ -22,14 +23,63 @@ from spreadsheetWrangler import SpreadsheetWrangler
 from wordTranslator import WordTranslator
 
 class Preferences():
-    importSpreadsheetPath = "."
-    exportSpreadsheetPath = abspath("..")
-    inputLangName = "English"
-    outputLangCodes = ["zh-Hans", "es", "vi"]
-    outputLangNames = ["Simplified Chinese", "Spanish", "Vietnamese"]
-    numOutputLangs = len(outputLangCodes)
-    outputSpreadsheetName = "outputTranslations.xlsx"
-    outputImagesLocation = join("..", "images")
+    _instance = None
+    appFolder = ""
+    config = configparser.ConfigParser()
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls, *args, **kwargs)
+        return cls._instance
+
+    def __init__(self):
+        if platform == 'win':
+            self.appFolder = join(os.environ['APPDATA'], "FoodBankTranslator")
+        else:
+            self.appFolder = join(join(os.path.expanduser("~"), ".local"), "FoodBankTranslator")
+
+        if not exists(self.appFolder):
+            os.makedirs(self.appFolder)
+
+        self.deserialize()
+        atexit.register(self.serialize)
+
+    def deserialize(self):
+        self.config['DEFAULT'] = {'importSpreadsheetPath': self.appFolder,
+                                  'exportSpreadsheetPath': self.appFolder,
+                                  'outputSpreadsheetName': "outputTranslations.xlsx",
+                                  'outputImagesLocation': join(self.appFolder, "images"),
+                                  'inputLangName': "English",
+                                  'outputLangCodes': ["zh-Hans", "es", "vi"],
+                                  'outputLangNames': ["Simplified Chinese", "Spanish", "Vietnamese"]}
+
+        self.config.read(join(self.appFolder, "config.ini"))
+
+        if "FoodBankSettings" not in self.config.sections():
+            self.config.add_section("FoodBankSettings")
+
+        self.importSpreadsheetPath = self.config.get("FoodBankSettings", "importSpreadsheetPath")
+        self.exportSpreadsheetPath = self.config.get("FoodBankSettings", "exportSpreadsheetPath")
+        self.outputSpreadsheetName = self.config.get("FoodBankSettings", "outputSpreadsheetName")
+        self.outputImagesLocation = self.config.get("FoodBankSettings", "outputImagesLocation")
+        self.inputLangName = self.config.get("FoodBankSettings", "inputLangName")
+        self.outputLangCodes = eval(self.config.get("FoodBankSettings", "outputLangCodes"))
+        self.outputLangNames = eval(self.config.get("FoodBankSettings", "outputLangNames"))
+        self.numOutputLangs = len(self.outputLangCodes)
+
+    def serialize(self):
+        cfgfile = open(join(self.appFolder, "config.ini"), "w")
+
+        self.config.set('FoodBankSettings', 'importSpreadsheetPath', self.importSpreadsheetPath)
+        self.config.set('FoodBankSettings', 'exportSpreadsheetPath', self.exportSpreadsheetPath)
+        self.config.set('FoodBankSettings', 'outputSpreadsheetName', self.outputSpreadsheetName)
+        self.config.set('FoodBankSettings', 'outputImagesLocation', self.outputImagesLocation)
+        self.config.set('FoodBankSettings', 'inputLangName', self.inputLangName)
+        self.config.set('FoodBankSettings', 'outputLangCodes', str(self.outputLangCodes))
+        self.config.set('FoodBankSettings', 'outputLangNames', str(self.outputLangNames))
+
+        self.config.write(cfgfile)
+        cfgfile.close()
 
 class SpreadsheetTitleRow(Widget):
     _gridLayout = None
@@ -146,7 +196,7 @@ class SelectImportSpreadsheetPopup(FilePickerPopup):
         super().__init__(**kwargs)
 
     def on_selected(self, filepath, filename):
-        Preferences.importSpreadsheetPath = filepath
+        _preferences.importSpreadsheetPath = filepath
         super().on_selected(filepath,filename)
 
 class SelectExportFolderPopup(FilePickerPopup):
@@ -157,7 +207,7 @@ class SelectExportFolderPopup(FilePickerPopup):
         self._selectButton.text = "Use this folder"
 
     def on_selected(self, filepath, filename):
-        Preferences.exportSpreadsheetPath = filepath
+        _preferences.exportSpreadsheetPath = filepath
         super().on_selected(filepath,filename)
 
     def is_dir(self, directory, filename):
@@ -177,7 +227,7 @@ class Translator(Widget):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._spreadsheetTitleRow.initialize(Preferences.outputLangNames)
+        self._spreadsheetTitleRow.initialize(_preferences.outputLangNames)
         self.create_empty_spreadsheet_row()
         Window.maximize()
         Window.bind(on_resize=self.on_window_resize)
@@ -206,7 +256,7 @@ class Translator(Widget):
     def generate_translations(self):
         inputWords = self._spreadsheet.get_input_words()
         self.reset_spreadsheet()
-        translationsDict = WordTranslator().generate_translations_dict(inputWords, Preferences.outputLangCodes)
+        translationsDict = WordTranslator().generate_translations_dict(inputWords, _preferences.outputLangCodes)
         ImageDownloader().get_images_for_words(list(translationsDict.keys()))
         self.create_spreadsheet_rows_from_dict(translationsDict)
 
@@ -225,7 +275,7 @@ class Translator(Widget):
                 retranslate = True
 
             if retranslate:
-                outputWordsList = WordTranslator().get_translated_words(row.inputWord, Preferences.outputLangCodes)
+                outputWordsList = WordTranslator().get_translated_words(row.inputWord, _preferences.outputLangCodes)
                 i = 0
                 for cell in row.outputWordCells:
                     cell.text = outputWordsList[i]
@@ -241,22 +291,23 @@ class Translator(Widget):
     def export_to_spreadsheet(self):
         popup = SelectExportFolderPopup(
             title='Select output folder',
-            path=Preferences.exportSpreadsheetPath,
+            path=_preferences.exportSpreadsheetPath,
             onselect=self.export_to_spreadsheet2)
         popup.open()
 
     # takes contents on screen and creates a spreadsheet
     def export_to_spreadsheet2(self, folder):
-        Preferences.exportSpreadsheetPath = folder
-        outputFile = join(folder, Preferences.outputSpreadsheetName)
-        SpreadsheetWrangler.write_dict_to_spreadsheet(self._spreadsheet.build_dict(), outputFile, Preferences.outputLangNames)
-        webbrowser.open("file:///" + Preferences.exportSpreadsheetPath)
+        _preferences.exportSpreadsheetPath = folder
+        outputFile = join(folder, _preferences.outputSpreadsheetName)
+        SpreadsheetWrangler.write_dict_to_spreadsheet(self._spreadsheet.build_dict(), outputFile, _preferences.outputLangNames)
+        # Pop open the output dir to show the user the results
+        webbrowser.open("file:///" + _preferences.exportSpreadsheetPath)
 
     # reads contents of spreadsheet and updates contents on screen
     def import_from_spreadsheet(self):
         popup = SelectImportSpreadsheetPopup(
             title='Select import spreadsheet',
-            path=Preferences.importSpreadsheetPath,
+            path=_preferences.importSpreadsheetPath,
             onselect=self.load_spreadsheet_from_file)
         popup.open()
 
@@ -267,7 +318,7 @@ class Translator(Widget):
     # creates a new blank spreadsheet row
     def create_empty_spreadsheet_row(self):
         outputwords = []
-        for _ in range (0, Preferences.numOutputLangs):
+        for _ in range (0, _preferences.numOutputLangs):
             outputwords.append("")
         self.create_spreadsheet_row("", outputwords, "")
 
@@ -283,17 +334,21 @@ class Translator(Widget):
 
     # asks the user where to export images to
     def output_images(self):
+        if not exists(_preferences.outputImagesLocation):
+            os.makedirs(_preferences.outputImagesLocation)
+
         popup = SelectExportFolderPopup(
             title='Select output folder',
-            path=Preferences.outputImagesLocation,
+            path=_preferences.outputImagesLocation,
             onselect=self.output_images2)
         popup.open()
 
     # creates the final images
     def output_images2(self, folder):
-        Preferences.outputImagesLocation = folder
-        FinalImageCreator().main(join(Preferences.exportSpreadsheetPath, Preferences.outputSpreadsheetName), Preferences.outputImagesLocation)
-        webbrowser.open("file:///" + Preferences.outputImagesLocation)
+        _preferences.outputImagesLocation = folder
+        FinalImageCreator().main(join(_preferences.exportSpreadsheetPath, _preferences.outputSpreadsheetName), _preferences.outputImagesLocation)
+        # Pop open the output dir to show the user the results
+        webbrowser.open("file:///" + _preferences.outputImagesLocation)
 
     # creates spreadsheet rows from a dict of translations, finding images if they exist
     def create_spreadsheet_rows_from_dict(self, translationsDict):
@@ -309,6 +364,8 @@ class Translator(Widget):
     def reset_spreadsheet(self):
         self._spreadsheetViewer.clear_widgets()
         self._spreadsheet.rows = []
+
+_preferences = Preferences()
 
 class MainApp(App):
     def build(self):
