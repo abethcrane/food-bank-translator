@@ -1,5 +1,6 @@
-﻿from os.path import abspath, join, isdir
-from pathlib import Path
+﻿import webbrowser
+
+from os.path import abspath, join, isdir
 
 from kivy.app import App
 from kivy.clock import Clock
@@ -246,10 +247,12 @@ class Translator(Widget):
 
     # takes contents on screen and creates a spreadsheet
     def export_to_spreadsheet2(self, folder):
+        Preferences.exportSpreadsheetPath = folder
         outputFile = join(folder, Preferences.outputSpreadsheetName)
         SpreadsheetWrangler.write_dict_to_spreadsheet(self._spreadsheet.build_dict(), outputFile, Preferences.outputLangNames)
+        webbrowser.open("file:///" + Preferences.exportSpreadsheetPath)
 
-    # reads contents of spraedsheet and updates contents on screen
+    # reads contents of spreadsheet and updates contents on screen
     def import_from_spreadsheet(self):
         popup = SelectImportSpreadsheetPopup(
             title='Select import spreadsheet',
@@ -278,9 +281,19 @@ class Translator(Widget):
         self._spreadsheetViewer.remove_widget(row)
         self._spreadsheet.rows.remove(row)
 
-    # creates the final images
+    # asks the user where to export images to
     def output_images(self):
+        popup = SelectExportFolderPopup(
+            title='Select output folder',
+            path=Preferences.outputImagesLocation,
+            onselect=self.output_images2)
+        popup.open()
+
+    # creates the final images
+    def output_images2(self, folder):
+        Preferences.outputImagesLocation = folder
         FinalImageCreator().main(join(Preferences.exportSpreadsheetPath, Preferences.outputSpreadsheetName), Preferences.outputImagesLocation)
+        webbrowser.open("file:///" + Preferences.outputImagesLocation)
 
     # creates spreadsheet rows from a dict of translations, finding images if they exist
     def create_spreadsheet_rows_from_dict(self, translationsDict):
