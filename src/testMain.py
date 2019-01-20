@@ -33,7 +33,8 @@ class TestMain(unittest.TestCase):
         # doesn't throw even if the folder hasn't been created
         FinalImageCreator().main(
         thismodule.spreadsheetName,
-        thismodule.outputImagesFolder)
+        thismodule.outputImagesFolder,
+        os.path.join("..", "foodThumbnails"))
 
     #TODO test if given invalid spreadsheet location
 
