@@ -1,6 +1,15 @@
+import os
 from openpyxl import load_workbook, Workbook
 
 class SpreadsheetWrangler():
+    @staticmethod
+    def __safe_load_workbook__(filename, read_only = False):
+        if os.path.exists(filename):
+            return load_workbook(filename=filename, read_only=read_only)
+        else:
+            print ("spreadsheet at ", filename, " does not exist")
+            return None
+
     @staticmethod
     def write_dict_to_spreadsheet(translationsDict, outputspreadsheet, outputLangNames):
         # Initialize the spreadsheet
@@ -19,7 +28,10 @@ class SpreadsheetWrangler():
     @staticmethod
     def get_english_words(spreadsheetLocation):
         # Initialize the spreadsheet
-        workbook = load_workbook(filename = spreadsheetLocation)
+        workbook = SpreadsheetWrangler.__safe_load_workbook__(spreadsheetLocation)
+        if workbook == None:
+            return []
+            
         worksheet = workbook["translations"]
 
         englishWords = []
@@ -39,7 +51,10 @@ class SpreadsheetWrangler():
     @staticmethod    
     # Creates a dictionary of englishWord: [translatedWord, translatedWord, translatedWord]
     def build_translations_dict (spreadsheetLocation):
-        workbook = load_workbook(filename = spreadsheetLocation, read_only=True)
+        workbook = SpreadsheetWrangler.__safe_load_workbook__(spreadsheetLocation, read_only=True)
+        if workbook == None:
+            return {}
+
         worksheet = workbook["translations"]
 
         dict = {}
@@ -65,7 +80,10 @@ class SpreadsheetWrangler():
 
     @staticmethod
     def get_lists_of_words_per_language(spreadsheetLocation):
-        workbook = load_workbook(filename = spreadsheetLocation, read_only=True)
+        workbook = SpreadsheetWrangler.__safe_load_workbook__(spreadsheetLocation, read_only=True)
+        if workbook == None:
+            return [[], [], [], []]
+
         worksheet = workbook["translations"]
 
         result = [[], [], [], []]

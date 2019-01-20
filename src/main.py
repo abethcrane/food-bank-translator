@@ -65,6 +65,7 @@ class Preferences():
         self.inputLangName = self.config.get("FoodBankSettings", "inputLangName")
         self.outputLangCodes = eval(self.config.get("FoodBankSettings", "outputLangCodes"))
         self.outputLangNames = eval(self.config.get("FoodBankSettings", "outputLangNames"))
+        self.thumbnailsLocation = join(self.appFolder, "foodThumbnails")
         self.numOutputLangs = len(self.outputLangCodes)
 
     def serialize(self):
@@ -136,10 +137,10 @@ class SpreadsheetRow(Widget):
         self.numOutputLangs = len(outputWordsList)
         for i in range (0, self.numOutputLangs):
             outputLangWidget = TextInput(text=outputWordsList[i], multiline=False)
-			# Needs to be 2 from the end - before the thumbnail and delete columns
+            # Needs to be 2 from the end - before the thumbnail and delete columns
             self.gridLayout.add_widget(outputLangWidget, 2)
             self.outputWordCells.append(outputLangWidget)
-			
+            
     def delete_this_row(self, instance):
         Translator._instance.remove_spreadsheet_row(self)
 
@@ -159,12 +160,12 @@ class Thumbnail(Widget):
 
     def download_new_thumb(self):
         (img, self.tryTime) = ImageDownloader().get_next_image(self.name, self.tryTime + 1)
-        ImageDownloader.thumbify_and_save(self.name, img)
+        ImageDownloader.thumbify_and_save(self.name, img, _preferences.thumbnailsLocation)
         self.reload_img(0)
 
     def download_prev_thumb(self):
         (img, self.tryTime) = ImageDownloader().get_prev_image(self.name, self.tryTime - 1)
-        ImageDownloader.thumbify_and_save(self.name, img)
+        ImageDownloader.thumbify_and_save(self.name, img, _preferences.thumbnailsLocation)
         self.reload_img(0)
 
 class InputWordsPopup(Popup):
@@ -207,7 +208,6 @@ class SelectExportFolderPopup(FilePickerPopup):
         self._selectButton.text = "Use this folder"
 
     def on_selected(self, filepath, filename):
-        _preferences.exportSpreadsheetPath = filepath
         super().on_selected(filepath,filename)
 
     def is_dir(self, directory, filename):
@@ -236,7 +236,7 @@ class Translator(Widget):
         # Currently there's an issue on macos
         # https://github.com/kivy/kivy/issues/6082
         # width gets fired twice - the 2nd time the width is doubled
-		# so on macos we need to use width/2
+        # so on macos we need to use width/2
         if width < 700:
             self._buttonsGrid.rows = 7
             self._buttonsGrid.height = 350
@@ -257,7 +257,7 @@ class Translator(Widget):
         inputWords = self._spreadsheet.get_input_words()
         self.reset_spreadsheet()
         translationsDict = WordTranslator().generate_translations_dict(inputWords, _preferences.outputLangCodes)
-        ImageDownloader().get_images_for_words(list(translationsDict.keys()))
+        ImageDownloader().get_images_for_words(list(translationsDict.keys()), _preferences.thumbnailsLocation)
         self.create_spreadsheet_rows_from_dict(translationsDict)
 
     # only fill in rows with missing translations, and generate missing images
@@ -273,6 +273,8 @@ class Translator(Widget):
             # If the row is missing an image filepath, we also need to retranslate it
             if row.imgFilepath is "":
                 retranslate = True
+            elif not exists(row.imgFilepath):
+                retranslate = True
 
             if retranslate:
                 outputWordsList = WordTranslator().get_translated_words(row.inputWord, _preferences.outputLangCodes)
@@ -281,11 +283,11 @@ class Translator(Widget):
                     cell.text = outputWordsList[i]
                     i += 1
                 # See if an image exists but we just haven't loaded it
-                row.imgFilepath = FinalImageCreator.try_get_filepath_for_thumbnail(row.inputWord)
+                row.imgFilepath = FinalImageCreator.try_get_filepath_for_thumbnail(row.inputWord, _preferences.thumbnailsLocation)
                 # If it really doesn't exist, download a new one and then try to find it
                 if row.imgFilepath is "":
-                    ImageDownloader().get_images_for_words([row.inputWord])
-                    row.imgFilepath = FinalImageCreator.try_get_filepath_for_thumbnail(row.inputWord)
+                    ImageDownloader().get_images_for_words([row.inputWord], _preferences.thumbnailsLocation)
+                    row.imgFilepath = FinalImageCreator.try_get_filepath_for_thumbnail(row.inputWord, _preferences.thumbnailsLocation)
 
     # asks the user where to export to
     def export_to_spreadsheet(self):
@@ -334,6 +336,7 @@ class Translator(Widget):
 
     # asks the user where to export images to
     def output_images(self):
+        print(_preferences.outputImagesLocation, _preferences.exportSpreadsheetPath)
         if not exists(_preferences.outputImagesLocation):
             os.makedirs(_preferences.outputImagesLocation)
 
@@ -345,8 +348,9 @@ class Translator(Widget):
 
     # creates the final images
     def output_images2(self, folder):
+        print(_preferences.outputImagesLocation, _preferences.exportSpreadsheetPath)
         _preferences.outputImagesLocation = folder
-        FinalImageCreator().main(join(_preferences.exportSpreadsheetPath, _preferences.outputSpreadsheetName), _preferences.outputImagesLocation)
+        FinalImageCreator().main(join(_preferences.exportSpreadsheetPath, _preferences.outputSpreadsheetName), _preferences.outputImagesLocation, _preferences.thumbnailsLocation)
         # Pop open the output dir to show the user the results
         webbrowser.open("file:///" + _preferences.outputImagesLocation)
 
@@ -354,7 +358,7 @@ class Translator(Widget):
     def create_spreadsheet_rows_from_dict(self, translationsDict):
         self.reset_spreadsheet()
         for inputWord, outputWords in translationsDict.items():
-            filepath = FinalImageCreator.try_get_filepath_for_thumbnail(inputWord)
+            filepath = FinalImageCreator.try_get_filepath_for_thumbnail(inputWord, _preferences.thumbnailsLocation)
 
             # Add the row to the spreadsheet viewer
             newRow = SpreadsheetRow(parentSheet=self._spreadsheet, inputWord=inputWord, outputWords=outputWords, imgFilepath=filepath)

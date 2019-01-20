@@ -1,4 +1,4 @@
-﻿import json, requests, sys, urllib.parse, uuid
+﻿import json, os, requests, sys, urllib.parse, uuid
 from io import BytesIO
 from PIL import Image
 from spreadsheetWrangler import SpreadsheetWrangler
@@ -14,7 +14,7 @@ class ImageDownloader():
 
     subscriptionKey = open("../subscriptionKeys/imageSubscriptionKey.txt").read()
 
-    def main(self, spreadsheetLocation):
+    def main(self, spreadsheetLocation, outputThumbnailsFolder):
         print("I'll print each word when I finish downloading a thumbnail for it")
 
         englishWords = SpreadsheetWrangler.get_english_words(spreadsheetLocation)
@@ -24,13 +24,13 @@ class ImageDownloader():
                 print("I couldn't find an image for " + englishWord)
                 continue
 
-            self.thumbify_and_save(englishWord, img)
+            self.thumbify_and_save(englishWord, img, outputThumbnailsFolder)
 
             print(englishWord)
         
         print("I'm finished downloading thumbnails")
 
-    def get_images_for_words(self, words):
+    def get_images_for_words(self, words, outputThumbnailsFolder):
         print ("I'm getting the images for some words - I'll print each one's name as I go")
         for word in words:
             if word is None or word is "":
@@ -41,11 +41,14 @@ class ImageDownloader():
                 print("I couldn't find an image for " + word)
                 continue
 
-            self.thumbify_and_save(word, img)
+            self.thumbify_and_save(word, img, outputThumbnailsFolder)
             print(word)
 
     @staticmethod
-    def thumbify_and_save(word, img):
+    def thumbify_and_save(word, img, outputThumbnailsFolder):
+        if not os.path.exists(outputThumbnailsFolder):
+            os.makedirs(outputThumbnailsFolder)
+    
         if img is None or word is "":
             print("Cannot save empty image or with empty file names")
             return
@@ -54,7 +57,7 @@ class ImageDownloader():
         img.thumbnail(thismodule.thumbnailSize, Image.ANTIALIAS)
         
         # Save the thumbnail
-        imageFilename = "../foodThumbnails/" + word + ".jpg"
+        imageFilename = os.path.join(outputThumbnailsFolder, word + ".jpg")
         img.convert('RGB').save(imageFilename, "JPEG")
 
     def get_next_image(self, word, n):
@@ -109,4 +112,4 @@ class ImageDownloader():
             return ""
 
 if __name__ == '__main__':
-    ImageDownloader().main("../translatedWords.xlsx")
+    ImageDownloader().main(join("..", "translatedWords.xlsx"), join("..", "foodThumbnails"))

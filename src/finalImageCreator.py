@@ -22,7 +22,7 @@ class FinalImageCreator():
 
     translationsDict = {}
     
-    def main(self, spreadsheetLocation, outputFolder):           
+    def main(self, spreadsheetLocation, outputFolder, thumbnailsFolder):           
         if not os.path.exists(outputFolder):
             os.makedirs(outputFolder)
 
@@ -43,7 +43,7 @@ class FinalImageCreator():
             imageDrawer = ImageDraw.Draw(outputImage)            
 
             # Try to find the thumbnail for this word
-            filepath = self.try_get_filepath_for_thumbnail(inputWord)
+            filepath = self.try_get_filepath_for_thumbnail(inputWord, thumbnailsFolder)
 
             # Handle printing the thumbnail if there is one
             if filepath is None:
@@ -87,13 +87,11 @@ class FinalImageCreator():
     # try to find an image for the thumbnail - tries jpg and png. doesn't do anything with casing
     # if it can't find it, it returns empty string
     @staticmethod
-    def try_get_filepath_for_thumbnail(word):
+    def try_get_filepath_for_thumbnail(word, thumbnailsFolder):
         # Try to come up with an appropriate image path
-        filepath = join("..", "foodThumbnails")
-        filepath = join(filepath, word + ".jpg")	
+        filepath = join(thumbnailsFolder, word + ".jpg")	
         if not Path(filepath).is_file():
-            filepath = join("..", "foodThumbnails")
-            filepath = join(filepath, word + ".png")
+            filepath = join(thumbnailsFolder, word + ".png")
             if not Path(filepath).is_file():
                 print ("Could not find an appropriate thumbnail for " + word)
                 filepath = ""
@@ -101,4 +99,4 @@ class FinalImageCreator():
         return filepath
 
 if __name__ == '__main__':
-    FinalImageCreator().main(join("..", "translatedWords.xlsx"), join("..", "images"))
+    FinalImageCreator().main(join("..", "translatedWords.xlsx"), join("..", "images"), join("..", "foodThumbnails"))
