@@ -9,14 +9,15 @@ matrix:
     - "3.7"
     - "nightly"
     install: pip install -r requirements.txt
+    script: pytest
   - os: osx
     language: sh
     install: pip3 install -r requirements.txt
+    script: pytest
   - os: windows
     language: sh
     before_install:
     - choco install python3
     - export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
-
- install: pip install -r requirements.txt
- script: pytest
+    install: pip install -r requirements.txt
+    script: pytest
