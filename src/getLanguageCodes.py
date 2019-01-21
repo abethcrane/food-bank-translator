@@ -1,8 +1,10 @@
-import http.client, json, sys, urllib.parse
+import http.client, json, os, sys, urllib.parse
+from os.path import join
 
 thismodule = sys.modules[__name__]
-
-thismodule.subscriptionKey =  open("subscriptionKey.txt").read()
+thismodule.scriptdir = os.path.dirname(os.path.realpath(__file__))
+thismodule.parentdir = join(thismodule.scriptdir, "..")
+thismodule.subscriptionKey = open(join(join(thismodule.parentdir , "subscriptionKeys"), "translatorSubscriptionKey.txt")).read()
 thismodule.host = 'api.cognitive.microsofttranslator.com'
 thismodule.path = '/languages?api-version=3.0'
 thismodule.outputPath = 'languageCodes.txt'

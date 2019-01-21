@@ -1,9 +1,15 @@
-import http.client, json, urllib.parse, uuid
+import http.client, json, os, sys, urllib.parse, uuid
+from os.path import join
 from spreadsheetWrangler import SpreadsheetWrangler
 
-class WordTranslator():
+thismodule = sys.modules[__name__]
+thismodule.scriptdir = os.path.dirname(os.path.realpath(__file__))
+thismodule.parentdir = join(thismodule.scriptdir, "..")
 
-    subscriptionKey = open("../subscriptionKeys/translatorSubscriptionKey.txt").read()
+class WordTranslator():
+    subscriptionKeysFolder = join(thismodule.parentdir, "subscriptionKeys")
+    subscriptionKeyPath = join(subscriptionKeysFolder, "translatorSubscriptionKey.txt")
+    subscriptionKey = open(subscriptionKeyPath).read()
     host = 'api.cognitive.microsofttranslator.com'
     path = '/translate?api-version=3.0'
 
@@ -37,7 +43,7 @@ class WordTranslator():
 
     def get_translated_words(self, inputWord, outputLangs):
         result = self.__get_translations_from_server(inputWord, outputLangs)
-        return self.get_words_from_result(result)
+        return self.__get_words_from_result(result)
 
     # gets server translation json for a given word to the given output langs
     def __get_translations_from_server(self, word, outputLangs):
@@ -64,7 +70,7 @@ class WordTranslator():
     
     @staticmethod
     # converts output json into a list of the translated words
-    def get_words_from_result(result):
+    def __get_words_from_result(result):
         jsonData = json.loads(result)
         words = []
         for language in jsonData[0]["translations"]:
@@ -73,8 +79,10 @@ class WordTranslator():
         return words
         
 if __name__ == '__main__':
+    inputFolder = join(thismodule.parentdir, "input")
+    outputFolder = join(thismodule.parentdir, "output")
     WordTranslator().main(
-        list(open("../words.txt")),
-        "../translatedWords.xlsx",
-        list(open("../toLanguages.txt"))[1:],
+        list(open(join(inputFolder, "words.txt"))),
+        join(outputFolder,"translatedWords.xlsx"),
+        list(open(join(inputFolder, "toLanguages.txt")))[1:],
         ["Simplified Chinese", "Spanish", "Vietnamese"]) # Yeah it's a bit of a hardcoded cheat, I know

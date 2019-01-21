@@ -4,10 +4,13 @@ subscriptionKey.txt
 translatorSubscriptionKey.txt
 imageSubscriptionKey.txt
 *.pyc
-foodThumbnails/*
-images/*
 __pycache__
 .vscode/settings.json
 translatedWords.xlsx
 src/dist/*
 src/build/*
+output/*
+input/*
+tests/testimages/*
+tests/testTranslatedWords.xlsx
+outputTranslations.xlsx

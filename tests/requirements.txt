@@ -1,0 +1,4 @@
+PIL
+openpyxl
+requests
+pytest

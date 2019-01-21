@@ -1,5 +1,6 @@
 ﻿import json, os, requests, sys, urllib.parse, uuid
 from io import BytesIO
+from os.path import join
 from PIL import Image
 from spreadsheetWrangler import SpreadsheetWrangler
 
@@ -9,10 +10,14 @@ thismodule.searchUrl = "https://api.cognitive.microsoft.com/bing/v7.0/images/sea
 thismodule.maxTries = 5
 thismodule.resultsPerQuery = 35
 thismodule.thumbnailSize = (512, 512)
+thismodule.scriptdir = os.path.dirname(os.path.realpath(__file__))
+thismodule.parentdir = join(thismodule.scriptdir, "..")
 
 class ImageDownloader():
 
-    subscriptionKey = open("../subscriptionKeys/imageSubscriptionKey.txt").read()
+    subscriptionKeysFolder = join(thismodule.parentdir, "subscriptionKeys")
+    subscriptionKeyPath = join(subscriptionKeysFolder, "imageSubscriptionKey.txt")
+    subscriptionKey = open(subscriptionKeyPath).read()
 
     def main(self, spreadsheetLocation, outputThumbnailsFolder):
         print("I'll print each word when I finish downloading a thumbnail for it")
@@ -21,7 +26,7 @@ class ImageDownloader():
         for englishWord in englishWords:
             (img, _) = self.get_next_image(englishWord, 0)
             if img is None:
-                print("I couldn't find an image for " + englishWord)
+                print("I couldn't find an image for", englishWord)
                 continue
 
             self.thumbify_and_save(englishWord, img, outputThumbnailsFolder)
@@ -38,7 +43,7 @@ class ImageDownloader():
 
             (img, _) = self.get_next_image(word, 0)
             if img is None:
-                print("I couldn't find an image for " + word)
+                print("I couldn't find an image for", word)
                 continue
 
             self.thumbify_and_save(word, img, outputThumbnailsFolder)
@@ -57,7 +62,7 @@ class ImageDownloader():
         img.thumbnail(thismodule.thumbnailSize, Image.ANTIALIAS)
         
         # Save the thumbnail
-        imageFilename = os.path.join(outputThumbnailsFolder, word + ".jpg")
+        imageFilename = join(outputThumbnailsFolder, word + ".jpg")
         img.convert('RGB').save(imageFilename, "JPEG")
 
     def get_next_image(self, word, n):
@@ -93,7 +98,7 @@ class ImageDownloader():
             img = Image.open(BytesIO(r.content))
         except OSError:
             # This is okay, we'll just try another one
-            print(url + " could not be downloaded.")
+            print(url, "could not be downloaded.")
 
         return img
 
@@ -112,4 +117,5 @@ class ImageDownloader():
             return ""
 
 if __name__ == '__main__':
-    ImageDownloader().main(join("..", "translatedWords.xlsx"), join("..", "foodThumbnails"))
+    outputFolder = join(thismodule.parentdir, "output")
+    ImageDownloader().main(join(outputFolder, "translatedWords.xlsx"), join(outputFolder, "foodThumbnails"))

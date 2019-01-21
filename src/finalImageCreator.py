@@ -8,6 +8,8 @@ from spreadsheetWrangler import SpreadsheetWrangler
 thismodule = sys.modules[__name__]
 
 # consts
+thismodule.scriptdir = os.path.dirname(os.path.realpath(__file__))
+thismodule.parentdir = join(thismodule.scriptdir, "..")
 # Width and height are determined as half A4 paper at 300 dpi
 thismodule.imageWidth = 2480
 thismodule.imageHeight = 1754
@@ -15,7 +17,7 @@ thismodule.horizontalPadding = 50
 thismodule.lineSpacingHeight = 100
 thismodule.maxFontSize = 200
 thismodule.idealFontSize = thismodule.maxFontSize
-thismodule.fontLocation = "NotoSansCJKsc-Light.otf"
+thismodule.fontLocation = join(thismodule.scriptdir, "NotoSansCJKsc-Light.otf")
 thismodule.thumbnailSize = (512, 512)
 
 class FinalImageCreator():
@@ -46,7 +48,7 @@ class FinalImageCreator():
             filepath = self.try_get_filepath_for_thumbnail(inputWord, thumbnailsFolder)
 
             # Handle printing the thumbnail if there is one
-            if filepath is None:
+            if filepath == None or filepath == "":
                 foodThumbnailImage = None
                 thumbnailWidth, thumbnailHeight = 0,0 
                 leftSideOfThumbnail = thismodule.imageWidth
@@ -99,4 +101,5 @@ class FinalImageCreator():
         return filepath
 
 if __name__ == '__main__':
-    FinalImageCreator().main(join("..", "translatedWords.xlsx"), join("..", "images"), join("..", "foodThumbnails"))
+    outputFolder = join(thismodule.parentdir, "output")
+    FinalImageCreator().main(join(outputFolder, "translatedWords.xlsx"), join(outputFolder, "images"), join(outputFolder, "foodThumbnails"))
