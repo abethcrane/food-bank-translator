@@ -1,4 +1,4 @@
-import os, pytest, sys, shutil
+import inspect, os, pytest, sys, shutil
 from os.path import join
 
 from spreadsheetWrangler import SpreadsheetWrangler
@@ -14,7 +14,10 @@ thismodule.spreadsheetName = join(join(thismodule.parentdir, "tests"), "testTran
 thismodule.outputImagesFolder = join(join(thismodule.parentdir, "tests"), "testimages")
 
 class WordTranslatorStub():
-    def translate_words_and_create_spreadsheet(self, inputWords, outputspreadsheet, outputLangCodes, outputLangNames):
+    def no_init(self):
+        pass
+
+    def stubbed_word_translator(self, inputWords, outputspreadsheet, outputLangCodes, outputLangNames):
         # We ignore the input words and the desired languages
         translationsDict = {"fish": ["鱼", "Pescado", "Cá"], "kidney beans": ["芸豆", "Frijoles", "Đậu thận"]}
         SpreadsheetWrangler.write_dict_to_spreadsheet(translationsDict, outputspreadsheet, outputLangCodes)
@@ -32,10 +35,16 @@ class TestCrashes(object):
     # the order of these is important - they depend upon each other
     # should that be the case? probably not!
 
-    # Use our stubbed word translator that doesn't require a subscription key
-    WordTranslator.translate_words_and_create_spreadsheet = WordTranslatorStub.translate_words_and_create_spreadsheet
+    def test_wordTranslator_stub_signature_matches(self):
+        original = inspect.signature(WordTranslator.translate_words_and_create_spreadsheet)
+        stub = inspect.signature(WordTranslatorStub.stubbed_word_translator)
+        assert (original == stub)
 
     def test_wordTranslator_does_not_throw(self):
+        # Use our stubbed word translator that doesn't require a subscription key
+        WordTranslator.__init__ = WordTranslatorStub.no_init
+        WordTranslator.translate_words_and_create_spreadsheet = WordTranslatorStub.stubbed_word_translator
+
         WordTranslator().translate_words_and_create_spreadsheet(
         ["fish", "apples"],
         thismodule.spreadsheetName,
