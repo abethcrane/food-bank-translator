@@ -108,6 +108,7 @@
 <FilePickerPopup>:
     _filechooser: filechooser.__self__
     _selectButton: selectButton.__self__
+    _currentPathLabel: currentPath.__self__
     auto_dismiss: False
     size_hint: 0.5, 0.7
 
@@ -117,12 +118,18 @@
         pos: root.pos
         cols: 1
 
+        Label:
+            id: currentPath
+            text: "Current Path: "
+            size_hint: 1, 0.1
+
         FileChooserIconView:
             id: filechooser
             size_hint: None, 1
             size: root.size[0], root.size[1] - popupbuttons.minimum_height
             path: root._path
             filters: ["*.xls*"]
+            on_entries_cleared: root.update_path()
 
         GridLayout:
             id: popupbuttons
