@@ -179,16 +179,15 @@ class FilePickerPopup(Popup):
     _path = StringProperty(".")
     _filechooser = None
     _selectButton = None
-    _currentPathLabel = None
 
     def __init__(self, **kwargs):
         self._path = kwargs.pop("path")
         self.onselect = kwargs.pop("onselect")
         super().__init__(**kwargs)
-        self._currentPathLabel.text = "Current Path: " + self._path
+        self.savedTitle = self.title
 
     def update_path(self):
-        self._currentPathLabel.text = "Current Path: " + self._filechooser.path
+        self.title = self.savedTitle + "\nCurrent folder: " + self._filechooser.path
 
     def on_selected(self, filepath, filename):
         path = filepath
