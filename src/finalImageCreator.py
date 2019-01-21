@@ -25,11 +25,9 @@ class FinalImageCreator():
     def __init__(self):
         self.translationsDict = {}
 
-    def create_images(self, spreadsheetLocation, outputFolder, thumbnailsFolder):           
+    def create_images(self, translationsDict, outputFolder, thumbnailsFolder):           
         if not os.path.exists(outputFolder):
             os.makedirs(outputFolder)
-
-        self.translationsDict = SpreadsheetWrangler.build_translations_dict(spreadsheetLocation)
 
         print("I'll print each word when I finish creating the output image for it")
 
@@ -103,7 +101,9 @@ class FinalImageCreator():
 
 if __name__ == '__main__':
     outputFolder = join(thismodule.parentdir, "output")
+    translationsDict = SpreadsheetWrangler.build_translations_dict(join(outputFolder, "translatedWords.xlsx"))
+
     FinalImageCreator().create_images(
-        join(outputFolder, "translatedWords.xlsx"),
+        translationsDict,
         join(outputFolder, "images"),
         join(outputFolder, "foodThumbnails"))

@@ -360,7 +360,7 @@ class Translator(Widget):
         _preferences.outputImagesLocation = folder
 
         FinalImageCreator().create_images(
-            join(_preferences.exportSpreadsheetPath, _preferences.outputSpreadsheetName),
+            self._spreadsheet.build_dict(),
             _preferences.outputImagesLocation,
             _preferences.thumbnailsLocation)
 

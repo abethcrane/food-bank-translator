@@ -32,9 +32,6 @@ class TestFontManipulator(object):
         assert (200 == FontManipulator.find_font_size_to_fit_width("Chicken broth", 1818, thismodule.fontLocation, 200))
 
 class TestCrashes(object):
-    # the order of these is important - they depend upon each other
-    # should that be the case? probably not!
-
     def test_wordTranslator_stub_signature_matches(self):
         original = inspect.signature(WordTranslator.translate_words_and_create_spreadsheet)
         stub = inspect.signature(WordTranslatorStub.stubbed_word_translator)
@@ -52,9 +49,11 @@ class TestCrashes(object):
         ["Simplified Chinese", "Spanish", "Vietnamese"])
 
     def test_finalImageCreator_does_not_throw(self):
+        translationsDict = {"fish": ["鱼", "Pescado", "Cá"], "kidney beans": ["芸豆", "Frijoles", "Đậu thận"]}
+
         # doesn't throw even if the folder hasn't been created
         FinalImageCreator().create_images(
-        thismodule.spreadsheetName,
+        translationsDict,
         thismodule.outputImagesFolder,
         join(join(thismodule.parentdir, "output"), "foodThumbnails"))
 

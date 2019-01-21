@@ -15,7 +15,7 @@ class SpreadsheetWrangler():
             translatedWords.insert(0, inputWord)
             worksheet.append(translatedWords)
 
-        workbook.save(outputspreadsheet)
+        SpreadsheetWrangler.__safe_save_workbook(workbook, outputspreadsheet)
 
     @staticmethod
     def get_english_words(spreadsheetLocation):
@@ -97,4 +97,13 @@ class SpreadsheetWrangler():
         else:
             print ("spreadsheet at ", filename, " does not exist")
             return None
+
+    @staticmethod
+    # If the directory in the filepath doesn't exist, create it
+    def __safe_save_workbook(workbook, filepath):
+        parentDir = os.path.dirname(filepath)
+        if not os.path.exists(parentDir):
+            os.makedirs(parentDir)
+
+        return workbook.save(filepath)
 
