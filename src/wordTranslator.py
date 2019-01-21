@@ -7,17 +7,18 @@ thismodule.scriptdir = os.path.dirname(os.path.realpath(__file__))
 thismodule.parentdir = join(thismodule.scriptdir, "..")
 
 class WordTranslator():
-    subscriptionKeysFolder = join(thismodule.parentdir, "subscriptionKeys")
-    subscriptionKeyPath = join(subscriptionKeysFolder, "translatorSubscriptionKey.txt")
-    subscriptionKey = open(subscriptionKeyPath).read()
-    host = 'api.cognitive.microsofttranslator.com'
-    path = '/translate?api-version=3.0'
+    def __init__(self):
+        subscriptionKeysFolder = join(thismodule.parentdir, "subscriptionKeys")
+        subscriptionKeyPath = join(subscriptionKeysFolder, "translatorSubscriptionKey.txt")
+        self.subscriptionKey = open(subscriptionKeyPath).read()
+        self.host = 'api.cognitive.microsofttranslator.com'
+        self.path = '/translate?api-version=3.0'
 
-    def main(self, inputWords, outputspreadsheet, outputLangCodes, outputLangNames):
+    def translate_words_and_create_spreadsheet(self, inputWords, outputspreadsheet, outputLangCodes, outputLangNames):
         print("I'll print each word when I finish translating it")
 
-        dict = self.generate_translations_dict(inputWords, outputLangCodes)
-        SpreadsheetWrangler.write_dict_to_spreadsheet(dict, outputspreadsheet, outputLangCodes)
+        translationsDict = self.generate_translations_dict(inputWords, outputLangCodes)
+        SpreadsheetWrangler.write_dict_to_spreadsheet(translationsDict, outputspreadsheet, outputLangCodes)
 
         print ("I'm finished translating words")
         
@@ -81,7 +82,7 @@ class WordTranslator():
 if __name__ == '__main__':
     inputFolder = join(thismodule.parentdir, "input")
     outputFolder = join(thismodule.parentdir, "output")
-    WordTranslator().main(
+    WordTranslator().translate_words_and_create_spreadsheet(
         list(open(join(inputFolder, "words.txt"))),
         join(outputFolder,"translatedWords.xlsx"),
         list(open(join(inputFolder, "toLanguages.txt")))[1:],

@@ -13,6 +13,12 @@ thismodule.fontLocation = join(thismodule.scriptdir, "NotoSansCJKsc-Light.otf")
 thismodule.spreadsheetName = join(join(thismodule.parentdir, "tests"), "testTranslatedWords.xlsx")
 thismodule.outputImagesFolder = join(join(thismodule.parentdir, "tests"), "testimages")
 
+class WordTranslatorStub():
+    def translate_words_and_create_spreadsheet(self, inputWords, outputspreadsheet, outputLangCodes, outputLangNames):
+        # We ignore the input words and the desired languages
+        translationsDict = {"fish": ["鱼", "Pescado", "Cá"], "kidney beans": ["芸豆", "Frijoles", "Đậu thận"]}
+        SpreadsheetWrangler.write_dict_to_spreadsheet(translationsDict, outputspreadsheet, outputLangCodes)
+
 class TestFontManipulator(object):
     def test_find_font_size_to_fit_height(self):
         assert (195 == FontManipulator.find_font_size_to_fit_height(['Flour', '面粉', 'Harina', 'Bột'], 1754, thismodule.fontLocation, 200, 100))
@@ -24,20 +30,21 @@ class TestFontManipulator(object):
 
 class TestCrashes(object):
     # the order of these is important - they depend upon each other
-    # should that be the case? perhaps not!
+    # should that be the case? probably not!
+
+    # Use our stubbed word translator that doesn't require a subscription key
+    WordTranslator.translate_words_and_create_spreadsheet = WordTranslatorStub.translate_words_and_create_spreadsheet
 
     def test_wordTranslator_does_not_throw(self):
-        WordTranslator().main(
+        WordTranslator().translate_words_and_create_spreadsheet(
         ["fish", "apples"],
         thismodule.spreadsheetName,
         ["zh-Hans", "es", "vi"],
         ["Simplified Chinese", "Spanish", "Vietnamese"])
 
     def test_finalImageCreator_does_not_throw(self):
-        print (thismodule.fontLocation)
-
         # doesn't throw even if the folder hasn't been created
-        FinalImageCreator().main(
+        FinalImageCreator().create_images(
         thismodule.spreadsheetName,
         thismodule.outputImagesFolder,
         join(join(thismodule.parentdir, "output"), "foodThumbnails"))

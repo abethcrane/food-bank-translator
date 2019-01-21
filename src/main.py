@@ -305,7 +305,12 @@ class Translator(Widget):
     def export_to_spreadsheet2(self, folder):
         _preferences.exportSpreadsheetPath = folder
         outputFile = join(folder, _preferences.outputSpreadsheetName)
-        SpreadsheetWrangler.write_dict_to_spreadsheet(self._spreadsheet.build_dict(), outputFile, _preferences.outputLangNames)
+
+        SpreadsheetWrangler.write_dict_to_spreadsheet(
+            self._spreadsheet.build_dict(),
+            outputFile,
+            _preferences.outputLangNames)
+
         # Pop open the output dir to show the user the results
         webbrowser.open("file:///" + _preferences.exportSpreadsheetPath)
 
@@ -340,7 +345,6 @@ class Translator(Widget):
 
     # asks the user where to export images to
     def output_images(self):
-        print(_preferences.outputImagesLocation, _preferences.exportSpreadsheetPath)
         if not exists(_preferences.outputImagesLocation):
             os.makedirs(_preferences.outputImagesLocation)
 
@@ -348,13 +352,18 @@ class Translator(Widget):
             title='Select output folder',
             path=_preferences.outputImagesLocation,
             onselect=self.output_images2)
+
         popup.open()
 
     # creates the final images
     def output_images2(self, folder):
-        print(_preferences.outputImagesLocation, _preferences.exportSpreadsheetPath)
         _preferences.outputImagesLocation = folder
-        FinalImageCreator().main(join(_preferences.exportSpreadsheetPath, _preferences.outputSpreadsheetName), _preferences.outputImagesLocation, _preferences.thumbnailsLocation)
+
+        FinalImageCreator().create_images(
+            join(_preferences.exportSpreadsheetPath, _preferences.outputSpreadsheetName),
+            _preferences.outputImagesLocation,
+            _preferences.thumbnailsLocation)
+
         # Pop open the output dir to show the user the results
         webbrowser.open("file:///" + _preferences.outputImagesLocation)
 

@@ -13,13 +13,20 @@ thismodule.thumbnailSize = (512, 512)
 thismodule.scriptdir = os.path.dirname(os.path.realpath(__file__))
 thismodule.parentdir = join(thismodule.scriptdir, "..")
 
+class ImageDownloaderInterface():
+    """Abstract class/interface for ImageDownloader, so that we 
+    can stub it for unit testing - not requiring the subscriptionKey"""
+    def aMethod( self ):
+        raise NotImplementedError( "Should have implemented this" )
+
+
 class ImageDownloader():
+    def __init__(self):
+        subscriptionKeysFolder = join(thismodule.parentdir, "subscriptionKeys")
+        subscriptionKeyPath = join(subscriptionKeysFolder, "imageSubscriptionKey.txt")
+        self.subscriptionKey = open(subscriptionKeyPath).read()
 
-    subscriptionKeysFolder = join(thismodule.parentdir, "subscriptionKeys")
-    subscriptionKeyPath = join(subscriptionKeysFolder, "imageSubscriptionKey.txt")
-    subscriptionKey = open(subscriptionKeyPath).read()
-
-    def main(self, spreadsheetLocation, outputThumbnailsFolder):
+    def __main(self, spreadsheetLocation, outputThumbnailsFolder):
         print("I'll print each word when I finish downloading a thumbnail for it")
 
         englishWords = SpreadsheetWrangler.get_english_words(spreadsheetLocation)
@@ -118,4 +125,4 @@ class ImageDownloader():
 
 if __name__ == '__main__':
     outputFolder = join(thismodule.parentdir, "output")
-    ImageDownloader().main(join(outputFolder, "translatedWords.xlsx"), join(outputFolder, "foodThumbnails"))
+    ImageDownloader().__main(join(outputFolder, "translatedWords.xlsx"), join(outputFolder, "foodThumbnails"))

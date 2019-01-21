@@ -22,9 +22,10 @@ thismodule.thumbnailSize = (512, 512)
 
 class FinalImageCreator():
 
-    translationsDict = {}
-    
-    def main(self, spreadsheetLocation, outputFolder, thumbnailsFolder):           
+    def __init__(self):
+        self.translationsDict = {}
+
+    def create_images(self, spreadsheetLocation, outputFolder, thumbnailsFolder):           
         if not os.path.exists(outputFolder):
             os.makedirs(outputFolder)
 
@@ -102,4 +103,7 @@ class FinalImageCreator():
 
 if __name__ == '__main__':
     outputFolder = join(thismodule.parentdir, "output")
-    FinalImageCreator().main(join(outputFolder, "translatedWords.xlsx"), join(outputFolder, "images"), join(outputFolder, "foodThumbnails"))
+    FinalImageCreator().create_images(
+        join(outputFolder, "translatedWords.xlsx"),
+        join(outputFolder, "images"),
+        join(outputFolder, "foodThumbnails"))

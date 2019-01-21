@@ -26,9 +26,12 @@ def cleanup_results(results):
     
     return "\n".join(printLines)
 
-result = get_available_languages()
-niceResults = cleanup_results(result)
+if __name__ == '__main__':
+    result = get_available_languages()
+    niceResults = cleanup_results(result)
 
-f = open(thismodule.outputPath, 'w')
-f.write(niceResults)  
-f.close
+    f = open(thismodule.outputPath, 'w')
+    f.write(niceResults)  
+    f.close
+
+
