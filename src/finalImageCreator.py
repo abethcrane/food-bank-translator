@@ -21,18 +21,14 @@ thismodule.fontLocation = join(thismodule.scriptdir, "NotoSansCJKsc-Light.otf")
 thismodule.thumbnailSize = (512, 512)
 
 class FinalImageCreator():
-
-    def __init__(self):
-        self.translationsDict = {}
-
     def create_images(self, translationsDict, outputFolder, thumbnailsFolder):           
         if not os.path.exists(outputFolder):
             os.makedirs(outputFolder)
 
         print("I'll print each word when I finish creating the output image for it")
 
-        for inputWord, translatedWords in self.translationsDict.items():
-            if inputWord is None:
+        for inputWord, translatedWords in translationsDict.items():
+            if inputWord == None or inputWord == "":
                 continue
 
             # Arrange the words into a nice list
@@ -79,7 +75,9 @@ class FinalImageCreator():
                 word_y_pos += h + thismodule.lineSpacingHeight
 
             # Save off the image
-            outputImage.save(join(outputFolder, inputWord  + ".png"))
+            outputPath = join(outputFolder, inputWord  + ".png")
+            print(outputPath)
+            outputImage.save(outputPath)
 
             print(inputWord)
         print("I'm finished creating output images")

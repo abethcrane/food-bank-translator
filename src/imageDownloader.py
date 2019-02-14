@@ -89,7 +89,7 @@ class ImageDownloader():
             n = thismodule.resultsPerQuery - 1
         img = self.__get_nth_image_for_word(word, n)
         retryTime = 0
-        while img is None and retryTime < thismodule.maxTries:
+        while img is None and retryTime < thismodule.maxTries and n >= 0:
             retryTime += 1
             n -= 1
             img = self.__get_nth_image_for_word(word, n)
@@ -118,7 +118,11 @@ class ImageDownloader():
             response = requests.get(thismodule.searchUrl, headers=headers, params=params)
             response.raise_for_status()
             search_results = response.json()
-            return search_results["value"][retryTime]["contentUrl"]
+            if len(search_results["value"]) > retryTime:
+                return search_results["value"][retryTime]["contentUrl"]
+            else:
+                print("Oops, too many retries for " + word)
+                return ""
         except requests.exceptions.HTTPError:
             print("Could not find results for " + word)
             return ""
