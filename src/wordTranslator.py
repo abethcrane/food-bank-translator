@@ -1,5 +1,6 @@
 import http.client, json, os, sys, urllib.parse, uuid
 from os.path import join
+from socket import gaierror
 from spreadsheetWrangler import SpreadsheetWrangler
 
 thismodule = sys.modules[__name__]
@@ -63,17 +64,23 @@ class WordTranslator():
         }
 
         content = json.dumps(requestBody, ensure_ascii=False).encode('utf-8')
-
-        conn = http.client.HTTPSConnection(self.host)
-        conn.request ("POST", self.path + params, content, headers)
-        response = conn.getresponse()
-        return response.read()
+        try:
+            conn = http.client.HTTPSConnection(self.host)
+            conn.request ("POST", self.path + params, content, headers)
+            response = conn.getresponse()
+            return response.read()
+        except gaierror:
+            return None
     
     @staticmethod
     # converts output json into a list of the translated words
     def __get_words_from_result(result):
+        if result == None:
+            return []
+
         jsonData = json.loads(result)
         words = []
+		
         for language in jsonData[0]["translations"]:
             words.append(language["text"])
             

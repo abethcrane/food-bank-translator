@@ -284,6 +284,8 @@ class Translator(Widget):
                 outputWordsList = WordTranslator().get_translated_words(row.inputWord, _preferences.outputLangCodes)
                 i = 0
                 for cell in row.outputWordCells:
+                    if i >= len(outputWordsList):
+                        break
                     cell.text = outputWordsList[i]
                     i += 1
                 # See if an image exists but we just haven't loaded it

@@ -2,6 +2,7 @@
 from io import BytesIO
 from os.path import join
 from PIL import Image
+from socket import gaierror
 from spreadsheetWrangler import SpreadsheetWrangler
 
 thismodule = sys.modules[__name__]
@@ -123,7 +124,7 @@ class ImageDownloader():
             else:
                 print("Oops, too many retries for " + word)
                 return ""
-        except requests.exceptions.HTTPError:
+        except (requests.exceptions.HTTPError, gaierror, requests.exceptions.ConnectionError):
             print("Could not find results for " + word)
             return ""
 
